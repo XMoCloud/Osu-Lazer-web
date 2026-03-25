@@ -1,0 +1,696 @@
+:root {
+  --fade-duration: 120ms; /* faster white fade */
+  --bg-color: #000;
+  --white: #fff;
+}
+
+/* Webfont: Quicksand (provided in fonts/) */
+@font-face {
+  font-family: 'Quicksand';
+  src: url('../fonts/Quicksand-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Webfont: Fontspring Torus Pro (demo) */
+@font-face {
+  font-family: 'Fontspring';
+  src: url('../fonts/Fontspring-DEMO-toruspro-light.otf') format('opentype');
+  font-weight: 300 500;
+  font-display: swap;
+}
+
+html, body {
+  height: 100%;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg-color);
+  color: #fff;
+  font-family: 'Quicksand', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial;
+}
+
+/* Intro Screen */
+#intro {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: #000;
+  z-index: 10;
+  font-family: 'Quicksand', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial;
+}
+#intro video {
+  max-width: 100vw;
+  max-height: 100vh;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* fill nicely regardless of video aspect */
+  display: block;
+}
+
+#startOverlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.5);
+  z-index: 12;
+  cursor: pointer; /* signal click-anywhere */
+}
+#startOverlay.active { display: flex; }
+#startOverlay .startText {
+  color: #fff;
+  font-weight: 800;
+  font-size: clamp(16px, 3.2vmin, 28px);
+  font-family: 'Quicksand', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: center;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+  user-select: none;
+  pointer-events: none; /* allow clicking anywhere (overlay captures) */
+}
+
+/* White fade transition */
+#whiteFade {
+  position: fixed;
+  inset: 0;
+  background: var(--white);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--fade-duration) ease-in;
+  z-index: 20;
+}
+#whiteFade.active { opacity: 1; }
+
+/* Main Screen (index page) */
+#main {
+  position: fixed;
+  inset: 0;
+  display: none; /* becomes grid after intro */
+  place-items: center;
+  /* Background moved to /assets; path relative to this CSS file in /assets */
+  background: url("../assets/background.png") center/cover no-repeat fixed;
+  z-index: 1;
+}
+#main.active {
+  display: grid;
+}
+#logo {
+  width: min(56vmin, 560px); /* bigger logo */
+  max-width: 90vw;
+  height: auto;
+  user-select: none;
+  -webkit-user-drag: none;
+  filter: drop-shadow(0 8px 22px rgba(0,0,0,0.45));
+  will-change: transform;
+  cursor: pointer;
+  position: relative;
+  z-index: 6; /* ensure above the menu strip */
+}
+
+/* Click flash: brighten the logo itself briefly (neutral white, no outer glow) */
+#logo.flash {
+  animation: logoFlash 260ms ease-out both;
+}
+@keyframes logoFlash {
+  0% {
+    filter: drop-shadow(0 8px 22px rgba(0,0,0,0.45)) brightness(1) saturate(1);
+  }
+  35% {
+    /* Desaturate + brighten so the flash feels white, not tinted */
+    filter: drop-shadow(0 8px 22px rgba(0,0,0,0.45)) brightness(2.3) saturate(0) grayscale(1) contrast(1.06);
+  }
+  65% {
+    filter: drop-shadow(0 8px 22px rgba(0,0,0,0.45)) brightness(1.6) saturate(0.15) grayscale(1);
+  }
+  100% {
+    filter: drop-shadow(0 8px 22px rgba(0,0,0,0.45)) brightness(1) saturate(1);
+  }
+}
+
+#logo-stable-sibling {
+  width: min(56vmin, 560px);
+  max-width: 90vw;
+  height: auto;
+  aspect-ratio: 1 / 1; /* Assuming the logo is roughly square */
+  position: absolute;
+  z-index: -1; /* Hide it */
+  pointer-events: none;
+  /* This element will be transformed by the menu open/close, but not the beat */
+  will-change: transform;
+}
+
+/* Accessibility: reduce motion preference trims transition time */
+@media (prefers-reduced-motion: reduce) {
+  #whiteFade { transition-duration: 80ms; }
+}
+
+/* Menu strip that extends from the center horizontally */
+#menuStrip {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) scaleX(0);
+  transform-origin: center center;
+  width: 100vw;
+  height: clamp(60px, 14vmin, 160px);
+  background: #222; /* solid dark gray */
+  border-radius: 0; /* sharp edges */
+  box-shadow: 0 10px 28px rgba(0,0,0,0.25);
+  z-index: 5;
+  transition: transform 280ms cubic-bezier(0.2, 0.9, 0.1, 1.0), opacity 220ms ease;
+  opacity: 0;
+  pointer-events: none;
+  display: block;
+  overflow: hidden; /* keep colored buttons inside */
+}
+
+#topBar {
+  position: fixed;
+  left: 0; right: 0; top: 0;
+  height: 46px;
+  background: #1b1b1b; /* darker gray */
+  color: #eee;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px; /* shift content slightly toward center (more inner padding) */
+  gap: 10px;
+  z-index: 25;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.35), 0 2px 6px rgba(0,0,0,0.28); /* elevated above bg */
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 200ms ease, opacity 180ms ease;
+  will-change: transform, opacity;
+}
+#topBar.active {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Beatmap browser view visibility/transition */
+#beatmapBrowser {
+  position: fixed;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(12px);
+  transition: transform 280ms cubic-bezier(0.2, 0.9, 0.1, 1.0), opacity 220ms ease;
+  z-index: 14; /* under the top bar (25), above menu strip (5) */
+}
+body.view-beatmaps #beatmapBrowser {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+/* Quick black flash overlay used when opening the beatmap browser */
+#selectionFade {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 40; /* above beatmapBrowser but below outro/topBar if desired */
+}
+
+@keyframes selectionFadeAnim {
+  /* Start fully opaque so the selection page can be revealed/loaded
+     under the overlay without peeking through. Hold opaque briefly
+     and then fade out to reveal the loaded selection. */
+  0% { opacity: 1; }
+  15% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* When the animation class is applied, run a short fade-to-black (single-shot)
+   animation. It's intentionally longer than the menu hide transition so the
+   menu can finish hiding before the flash completes. */
+#selectionFade.anim {
+  /* Longer fade to give the selection UI time to load while still
+     masking the background. */
+  animation: selectionFadeAnim 700ms ease-out forwards;
+}
+
+/* Keep top bar visible in beatmaps view */
+body.view-beatmaps #topBar {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Soften/hide menu while in beatmaps view */
+body.view-beatmaps #menuStrip {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-65%, -50%) scale(0.9); /* slide away, looks more dynamic */
+}
+
+/* Lift logo above the selection UI and bottom bar in beatmaps view */
+body.view-beatmaps #logo {
+  z-index: 120; /* above bottom bar (~100) */
+  position: relative;
+  pointer-events: none; /* decorative during selection */
+}
+
+/* Do not show the osu logo in the selection (beatmap) page as requested */
+body.view-beatmaps #logo,
+body.view-beatmaps #logo-stable-sibling {
+  display: none !important;
+}
+#topBar .left { display: flex; align-items: center; gap: 10px; min-width: 0; position: relative; }
+#topBar .right { display: flex; align-items: center; gap: 70px; }
+#topBar .right .user { display: inline-flex; align-items: center; gap: 8px; }
+#topBar .right .user .pfp { width: 28px; height: 28px; border-radius: 6px; object-fit: cover; box-shadow: 0 1px 2px rgba(0,0,0,0.35); }
+#topBar .right .user .name { font-family: 'Quicksand', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial; font-weight: 700; font-size: 13px; letter-spacing: 0.02em; color: #fff; }
+#topBar .clock { font-family: 'Quicksand', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial; font-weight: 700; font-size: 13px; letter-spacing: 0.02em; }
+#topBar .songMeta {
+  font-family: 'Quicksand', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#topBar .controls { display: flex; align-items: center; gap: 10px; }
+#topBar .ctrlBtn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: #eee;
+  width: 32px;
+  height: 32px;
+  display: grid; place-items: center;
+  cursor: pointer;
+}
+#topBar .ctrlBtn:hover { color: #fff; }
+/* Only toggle visibility for the Stop/Play button */
+#ctrlToggle .icon { display: none; }
+#ctrlToggle .icon-stop { display: inline-block; }
+#ctrlToggle.paused .icon-stop { display: none; }
+#ctrlToggle.paused .icon-play { display: inline-block; }
+
+/* Thin progress bar under the left group (title+controls) */
+#topBar .left .progress {
+  position: absolute;
+  left: 0; right: 0; bottom: -1px;
+  height: 3px;
+  background: rgba(255, 212, 90, 0.16); /* faint track */
+  border-radius: 2px;
+  overflow: hidden;
+}
+#topBar .left .progress .progressFill,
+#topBar .left .progress #progressFill {
+  height: 100%;
+  width: 0%;
+  background: #ffd45a; /* yellow */
+}
+#topBar .left .progress .progressTime,
+#topBar .left .progress #timeLeft {
+  position: absolute;
+  right: 0; bottom: 4px;
+  font-size: 11px;
+  color: #ffd45a;
+}
+
+/* Button flash on click (box-shadow based to avoid text/logo blur) */
+.menuBtn.flash { animation: btnFlash 180ms ease-out both; }
+@keyframes btnFlash {
+  0% { box-shadow: 0 0 0 0 rgba(255,255,255,0), inset 0 0 0 rgba(255,255,255,0); }
+  45% { box-shadow: 0 0 0 10px rgba(255,255,255,0.35), inset 0 0 12px rgba(255,255,255,0.55); }
+  100% { box-shadow: 0 0 0 0 rgba(255,255,255,0), inset 0 0 0 rgba(255,255,255,0); }
+}
+
+/* Revert Exit icon size to previous default */
+.menuBtn.exit .menuIcon { height: clamp(16px, 4.5vmin, 36px); }
+
+#menuStrip.open {
+  transform: translate(-50%, -50%) scaleX(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Right-side button group inside the strip, positioned to touch logo's right edge */
+.menuRight {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 0; /* buttons touch each other */
+  height: 100%;
+}
+
+.menuBtn {
+  position: relative;
+  height: 100%;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(6px, 1.2vmin, 10px);
+  background: #555;
+  border: 0;
+  padding: 0 clamp(16px, 3vmin, 28px);
+  cursor: pointer;
+  overflow: hidden;
+  isolation: isolate;
+  transition: width 320ms cubic-bezier(0.2, 0.9, 0.1, 1.0), background-color 180ms ease;
+  width: clamp(160px, 18vmin, 280px);
+  margin: 0; /* ensure no gap */
+  /* Parallelogram: skew the button box; we'll counter-skew inner content */
+  transform: skewX(-12deg);
+  transform-origin: center;
+}
+.menuBtn .btnContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(6px, 1.2vmin, 10px);
+  transform: skewX(12deg);
+}
+.menuBtn.play {
+  width: clamp(200px, 22vmin, 320px); /* Wider to cover gap */
+  padding: 0 clamp(16px, 3vmin, 28px); /* symmetric padding for column layout */
+}
+.menuBtn .menuIcon {
+  position: relative;
+  z-index: 2; /* above fades */
+  display: block;
+  width: auto;
+  height: clamp(16px, 4.5vmin, 36px); /* default even smaller */
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+  /* Stronger layered shadow to sit behind the icon */
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)) drop-shadow(0 0 6px rgba(0,0,0,0.35));
+}
+.menuBtn.play .menuIcon {
+  height: clamp(18px, 5vmin, 44px); /* reduced further */
+}
+.menuBtn.import .menuIcon {
+  height: clamp(16px, 4.5vmin, 36px); /* reduced further */
+}
+.menuBtn .label {
+  position: relative;
+  z-index: 2;
+  font-family: 'Quicksand', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  user-select: none;
+  pointer-events: none;
+}
+
+.menuBtn.play { background: linear-gradient(135deg, #7b44c9, #5a24a8); }
+.menuBtn.import { background: linear-gradient(135deg, #e5a500, #c89200); }
+
+/* Ensure seam has no anti-aliased gap by overlapping a pixel */
+.menuRight .menuBtn.import { margin-left: -1px; }
+
+/* Counter-skew inner content so icons/labels look upright */
+/* content counter-skew handled by .btnContent */
+.menuBtn .menuIcon,
+.menuBtn .label { transform: none; }
+
+/* Edge fades to blend into the strip (#222) */
+.menuBtn.play::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: clamp(18px, 6vmin, 56px);
+  background: linear-gradient(to right, #222 0%, rgba(34,34,34,0) 100%);
+  z-index: 1; /* below label, above button bg */
+  pointer-events: none;
+}
+/* Remove gray fade from the yellow import button */
+.menuBtn.import::after { content: none; display: none; }
+
+/* Exit button (magenta) with right-side gray fade */
+.menuBtn.exit { background: #e83973; }
+/* Remove gray fade on Exit right side */
+.menuBtn.exit::after { content: none; display: none; }
+
+/* Hover growth pushed by menuStrip state classes */
+#menuStrip.hover-play .menuBtn.play { width: clamp(260px, 28vmin, 400px); }
+#menuStrip.hover-play .menuBtn.import { width: clamp(140px, 16vmin, 240px); }
+#menuStrip.hover-play .menuBtn.exit { width: clamp(140px, 16vmin, 240px); }
+#menuStrip.hover-import .menuBtn.import { width: clamp(220px, 24vmin, 360px); }
+#menuStrip.hover-import .menuBtn.play { width: clamp(180px, 20vmin, 280px); }
+#menuStrip.hover-import .menuBtn.exit { width: clamp(140px, 16vmin, 240px); }
+#menuStrip.hover-exit .menuBtn.exit { width: clamp(240px, 26vmin, 380px); }
+#menuStrip.hover-exit .menuBtn.play,
+#menuStrip.hover-exit .menuBtn.import { width: clamp(140px, 16vmin, 240px); }
+
+/* Black fade overlay and outro video */
+#blackFade {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+  z-index: 21;
+}
+#blackFade.active { opacity: 1; }
+
+#outro {
+  position: fixed;
+  inset: 0;
+  display: none;
+  place-items: center;
+  background: #000;
+  z-index: 30;
+}
+#outro.active { display: grid; }
+#outro video {
+  max-width: 100vw;
+  max-height: 100vh;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Gameplay overlay */
+body.gaming {
+  overflow: hidden;
+  cursor: none;
+}
+
+#game-area {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  z-index: 1000;
+}
+
+#game-area[hidden] {
+  display: none;
+}
+
+#game-area,
+#game-area * {
+  cursor: none !important;
+}
+
+#pause-menu {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 1500;
+}
+
+#pause-menu[hidden] {
+  display: none;
+}
+
+#pause-menu,
+#pause-menu * {
+  cursor: auto !important;
+}
+
+/* New pause layout: full-width gray band with stacked parallelogram buttons */
+.pause-menu-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0; /* no gap between buttons */
+  width: 100%;
+  padding: 0; /* buttons provide their own height */
+  text-align: center;
+}
+
+/* Full-width gray band behind the buttons */
+#pause-menu::before {
+  content: "";
+  position: absolute;
+  left: 0; right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  /* Gray base sized to exactly contain 3 stacked buttons */
+  /* Use a CSS var so title positioning can reference the same height */
+  height: var(--pause-base-height, clamp(168px, 30vmin, 276px));
+  background: rgba(24,24,24,0.92);
+  box-shadow: inset 0 -1px 0 rgba(255,255,255,0.04), 0 18px 42px rgba(0,0,0,0.45);
+  z-index: 0;
+}
+
+#pause-menu .pause-title {
+  /* Pull the title out of normal flow so buttons can center within the base */
+  position: absolute;
+  left: 0; right: 0;
+  /* Place it just above the gray base using the same height value */
+  top: -120px;
+  z-index: 3;
+  margin: 0; /* no flow impact */
+  font-size: clamp(28px, 5.2vmin, 48px);
+  font-family: 'Quicksand', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  color: #fcb500; /* golden */
+  text-align: center;
+  pointer-events: none; /* don't intercept clicks meant for buttons */
+}
+
+/* Base button style (text layer) */
+#pause-menu button,
+#fail-menu button {
+  position: relative;
+  z-index: 2; /* above gray band */
+  width: min(1200px, 86vw);
+  height: clamp(56px, 10vmin, 92px);
+  padding: 0 28px;
+  border: none;
+  background: transparent; /* background handled by ::before */
+  color: #fff;
+  font-family: 'Quicksand', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial;
+  font-weight: 800;
+  font-size: clamp(18px, 2.8vmin, 30px);
+  letter-spacing: 0.04em;
+  text-transform: none;
+  cursor: pointer;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.6), 0 4px 16px rgba(0,0,0,0.4);
+  transition: transform 140ms ease, filter 140ms ease, width 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Skewed colored background for each button */
+#pause-menu button::before,
+#fail-menu button::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 0; right: 0; top: 0; bottom: 0; /* keep entirely inside gray base */
+  transform: skewX(-10deg);
+  border-radius: 0;
+  box-shadow: 0 10px 26px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(255,255,255,0.06);
+  transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Colors */
+#pausebtn-continue::before { background: linear-gradient(180deg, #7dbc00, #6aa600); }
+#pausebtn-retry::before     { background: linear-gradient(180deg, #f0ad00, #d99600); }
+#pausebtn-quit::before      { background: linear-gradient(180deg, #b8202f, #9f1a27); }
+
+#pause-menu button:hover,
+#fail-menu button:hover { 
+  transform: translateY(0); 
+  filter: brightness(1.05); 
+  width: min(1400px, 94vw);
+}
+#pause-menu button:active,
+#fail-menu button:active { transform: translateY(0); filter: brightness(0.98); }
+#pause-menu button:focus-visible,
+#fail-menu button:focus-visible { outline: 2px solid rgba(255,255,255,0.85); outline-offset: 3px; }
+
+/* Fail menu styling: mirror pause menu layout (two buttons: Retry/Quit) */
+#fail-menu {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 1500;
+}
+
+#fail-menu[hidden] {
+  display: none;
+}
+
+#fail-menu,
+#fail-menu * { cursor: auto !important; }
+
+/* Full-width gray band behind the fail buttons (2 stacked buttons) */
+#fail-menu::before {
+  content: "";
+  position: absolute;
+  left: 0; right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  /* 2 x button height */
+  height: var(--fail-base-height, clamp(112px, 20vmin, 184px));
+  background: rgba(24,24,24,0.92);
+  box-shadow: inset 0 -1px 0 rgba(255,255,255,0.04), 0 18px 42px rgba(0,0,0,0.45);
+  z-index: 0;
+}
+
+/* Use the same flex stack as pause menu's .pause-menu-content (already set globally) */
+#fail-menu .pause-menu-content {
+  position: static; /* allow title to position relative to the overlay instead of this container */
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  gap: 0;
+  min-width: 0;
+  box-shadow: none;
+  border: 0;
+}
+
+/* Fail title positioned above the gray band (same approach as pause) */
+#fail-menu .pause-title {
+  position: absolute;
+  left: 0; right: 0;
+  /* Place title near the top of the screen */
+  top: 250px;
+  z-index: 3;
+  margin: 0;
+  font-size: clamp(28px, 5.2vmin, 48px);
+  font-family: 'Quicksand', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+  color: #fcb500; /* golden to match pause title */
+  text-align: center;
+  pointer-events: none;
+}
+
+/* Buttons reuse the shared pause styles above; just set colors for retry/quit */
+#failbtn-retry::before { background: linear-gradient(180deg, #f0ad00, #d99600); }
+#failbtn-quit::before  { background: linear-gradient(180deg, #b8202f, #9f1a27); }
+
+/* Hover/focus behaviors are shared with pause via the combined selectors above */

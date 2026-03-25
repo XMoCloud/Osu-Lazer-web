@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Osu!</title>
+		<link rel="stylesheet" href="css/styles.css" />
+	<link rel="stylesheet" href="css/beatmapList.css" />
+	<link rel="stylesheet" href="css/game.css" />
+	<link rel="icon" href="assets/Osu-Logo.png" type="image/png" />
+	
+</head>
+	<body>
+		
+		<audio id="bgm" src="hitsounds/Trinagles.mp3" preload="auto"></audio>
+
+		
+		<section id="intro" aria-label="Intro video">
+			<video id="introVideo" src="assets/intro.mp4" preload="auto" playsinline></video>
+
+			<div id="startOverlay" aria-hidden="true">
+				<div class="startText" role="button" aria-label="Click anywhere to start">Click anywhere to start</div>
+			</div>
+		</section>
+
+		
+		<div id="whiteFade" aria-hidden="true"></div>
+
+		
+		<main id="main" aria-label="Main menu">
+			
+			<div id="selectionFade" aria-hidden="true"></div>
+			
+			<div id="topBar" aria-hidden="true">
+				<div class="left">
+					<div class="songMeta"><span id="songTitle">cYsmix - Triangles</span></div>
+					<button id="ctrlPrev" class="ctrlBtn" type="button" title="Previous" aria-label="Previous">
+						<svg class="icon icon-prev" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 6h2v12H6V6zm3.5 6l8.5 6V6l-8.5 6z"/></svg>
+					</button>
+					<button id="ctrlToggle" class="ctrlBtn" type="button" title="Stop/Play" aria-label="Stop">
+						<svg class="icon icon-stop" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 6h12v12H6z"/></svg>
+						<svg class="icon icon-play" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>
+					</button>
+					<button id="ctrlNext" class="ctrlBtn" type="button" title="Next" aria-label="Next">
+						<svg class="icon icon-next" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16 6h2v12h-2V6zM6 18l8.5-6L6 6v12z"/></svg>
+					</button>
+					
+					<div class="progress" aria-hidden="true">
+						<div class="progressFill" id="progressFill"></div>
+						<div class="progressTime" id="timeLeft" aria-live="polite"></div>
+					</div>
+				</div>
+				<div class="right">
+					<div class="user" aria-label="Current player">
+						<img class="pfp" src="assets/pfp.png" alt="" />
+						<span class="name">osuPlayer1</span>
+					</div>
+					<div id="clock" class="clock" aria-live="polite"></div>
+				</div>
+			</div>
+			<img id="logo" src="assets/Osu-Logo.png" alt="osu! logo" />
+			<div id="logo-stable-sibling"></div>
+			
+			<div id="menuStrip" inert>
+				<div class="menuRight">
+					<button class="menuBtn play" type="button">
+						<span class="btnContent">
+							<img class="menuIcon" src="assets/transLogo.png" alt="" aria-hidden="true" />
+							<span class="label">Play</span>
+						</span>
+					</button>
+					<button class="menuBtn import" type="button">
+						<span class="btnContent">
+							<img class="menuIcon" src="assets/importLogo.png" alt="" aria-hidden="true" />
+							<span class="label">Import</span>
+						</span>
+					</button>
+					<button class="menuBtn exit" type="button">
+						<span class="btnContent">
+							<img class="menuIcon" src="assets/exitLogo.png" alt="" aria-hidden="true" />
+							<span class="label">Exit</span>
+						</span>
+					</button>
+				</div>
+			</div>
+			
+
+			
+			<section id="beatmapBrowser" aria-label="Beatmap selection" hidden>
+				<div class="pageBackground"></div>
+
+				
+				<div id="beatmapInfoBox">
+					<div class="infoTitle"></div>
+					<div class="infoArtist"></div>
+					<div class="infoStats">
+						<span class="infoStarTag"></span>
+						<span class="infoStat">HP: <span class="infoHP"></span></span>
+						<span class="infoStat">ACC: <span class="infoOD"></span></span>
+						<span class="infoStat">AR: <span class="infoAR"></span></span>
+						<span class="infoStat">CS: <span class="infoCS"></span></span>
+					</div>
+				</div>
+
+				
+				<div class="searchContainer">
+					<input type="text" class="searchBox" placeholder="Search..." aria-label="Search beatmaps" />
+				</div>
+
+				
+				<div class="beatmapListContainer">
+					
+				</div>
+
+				
+				<div class="leaderboardContainer">
+					<div class="leaderboardHeader"><span>Local Leaderboard</span></div>
+					<div class="leaderboardList" id="leaderboardList">
+						<div class="scoreEntry placeholder"><div class="playerInfo"><div class="playerName">No scores</div></div></div>
+					</div>
+				</div>
+
+				
+				<div class="bottomBar"></div>
+				<button class="backButton" aria-label="Back to menu"><span class="backButtonContent">Back</span></button>
+			</section>
+
+			
+			<div id="blackFade" aria-hidden="true"></div>
+			<section id="outro" aria-label="Outro video" hidden>
+				<video id="outroVideo" src="assets/outro.mp4" preload="auto" playsinline></video>
+			</section>
+		</main>
+
+		
+		<audio id="sfxOpen" src="hitsounds/logoClick.mp3" preload="auto"></audio>
+		<audio id="sfxBack" src="hitsounds/backToMenu.mp3" preload="auto"></audio>
+		<audio id="sfxHover" src="hitsounds/menuHover.mp3" preload="auto"></audio>
+		<audio id="sfxPlayClick" src="hitsounds/PlayClick.mp3" preload="auto"></audio>
+
+
+		<div id="game-area" hidden aria-label="Gameplay area"></div>
+
+
+
+		
+		<div id="pause-menu" hidden role="dialog" aria-modal="true" aria-label="Paused">
+			<div class="pause-menu-content">
+				<h2 class="pause-title">Paused</h2>
+				<button id="pausebtn-continue" type="button">Continue</button>
+				<button id="pausebtn-retry" type="button">Retry</button>
+				<button id="pausebtn-quit" type="button">Quit</button>
+			</div>
+		</div>
+
+		<script src="scripts/UI/intro.js" defer></script>
+		<script src="scripts/loaders/mapStore.js" defer></script>
+		<script src="scripts/loaders/minizip.js" defer></script>
+		<script type="module" src="scripts/loaders/initgame.js" defer></script>
+		<script src="scripts/loaders/launchgame.js" defer></script>
+		<script src="scripts/loaders/importer.js" defer></script>
+	</body>
+</html>
+

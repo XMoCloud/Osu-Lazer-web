@@ -1,0 +1,511 @@
+/* Game Overlays CSS - extracted from JS files */
+
+/* ===== Score Overlay (In-Game HUD) ===== */
+.score-overlay-root {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 10000;
+  pointer-events: none;
+  font-family: 'QuicksandVar', system-ui, sans-serif;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+/* Legacy centered row (no longer used) */
+.score-overlay-wrap {
+  display: none;
+}
+
+/* Top-right stack: score (top) then accuracy */
+.score-top-right {
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  pointer-events: none;
+}
+
+/* Row that holds progress circle + accuracy */
+.score-mid-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Circular duration clock */
+.progress-circle {
+  --size: clamp(44px, 5vmin, 65px);
+  width: var(--size);
+  height: var(--size);
+  position: relative;
+  border-radius: 50%;
+  background: conic-gradient(#ffffff 0deg, rgba(255, 255, 255, 0.15) 0deg);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.25);
+}
+
+.progress-circle::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 50%;
+}
+
+.progress-circle::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.4) inset;
+}
+
+/* Bottom-left: combo only */
+.score-bottom-left {
+  position: fixed;
+  left: 14px;
+  bottom: 14px;
+  z-index: 10001;
+  pointer-events: none;
+}
+
+.score-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(20, 20, 20, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  backdrop-filter: blur(2px);
+}
+
+.score-chip .label {
+  font-weight: 600;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.score-chip .value {
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+/* Bigger text sizes */
+.score-chip.score .value {
+  font-size: clamp(24px, 3.6vmin, 36px);
+}
+
+.score-chip.acc .value {
+  font-size: clamp(20px, 2.8vmin, 28px);
+}
+
+.score-chip.combo .value {
+  font-size: clamp(60px, 7.5vmin, 110px);
+}
+
+/* Remove background + border for score & acc */
+.score-chip.score,
+.score-chip.acc {
+  background: none;
+  border: none;
+  backdrop-filter: none;
+  padding: 0;
+}
+
+.score-chip.score {
+  align-items: flex-end;
+}
+
+.score-chip.score .label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+/* Combo vertical layout: label above, left-aligned */
+.score-chip.combo {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.score-chip.combo .label {
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+
+.score-chip.combo .value {
+  line-height: 0.9;
+}
+
+/* Remove background/border from combo chip - just the number */
+.score-chip.combo {
+  background: none;
+  border: none;
+  padding: 0;
+  backdrop-filter: none;
+}
+
+/* HP bar across very top */
+.hpbar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.hpbar-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0%;
+  background: #ffffff;
+  box-shadow: 0 0 8px rgba(77, 208, 225, 0.8), 0 0 12px rgba(0, 188, 212, 0.6);
+  transition: width 0.12s linear;
+}
+
+/* ===== Results Overlay ===== */
+.results-overlay-root {
+  position: fixed;
+  inset: 0;
+  z-index: 10010;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  opacity: 0;
+  animation: fadeInOverlay 0.4s ease forwards;
+}
+
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.results-card {
+  width: min(520px, 90vw);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(30, 30, 35, 0.9), rgba(25, 25, 30, 0.9));
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  font-family: Quicksand, system-ui, sans-serif;
+  overflow: hidden;
+  opacity: 0;
+  transform: scale(0.92);
+  animation: fadeInCard 0.5s ease 0.15s forwards;
+}
+
+@keyframes fadeInCard {
+  from {
+    transform: scale(0.92);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.results-card .hdr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.results-card .hdr img {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  object-fit: cover;
+}
+
+.results-card .hdr .name {
+  font-weight: 800;
+  font-size: 16px;
+}
+
+.results-card .meta {
+  padding: 16px 20px 0 20px;
+  text-align: center;
+}
+
+.results-card .title {
+  font-weight: 800;
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.results-card .artist {
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+.results-card .rank-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 0;
+}
+
+.results-card .rank-img {
+  width: 180px;
+  height: auto;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.7));
+}
+
+.results-card .score {
+  padding: 4px 20px 0 20px;
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+.results-card .chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 10px 20px 0;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  font-weight: 700;
+}
+
+.chip .star {
+  color: #ffd25e;
+  font-size: 16px;
+}
+
+.results-card .diff {
+  opacity: 0.85;
+  text-align: center;
+  padding: 4px 20px 0;
+}
+
+.results-card .stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 18px 20px;
+}
+
+.stat {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 10px;
+  text-align: center;
+}
+
+.stat .label {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.stat .value {
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.results-card .judges {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 0 20px 20px;
+}
+
+.judge {
+  border-radius: 10px;
+  padding: 8px;
+  text-align: center;
+  font-weight: 800;
+}
+
+.jg-great {
+  background: rgba(102, 204, 255, 0.12);
+  color: #66ccff;
+}
+
+.jg-ok {
+  background: rgba(136, 179, 0, 0.12);
+  color: #88b300;
+}
+
+.jg-meh {
+  background: rgba(255, 204, 34, 0.12);
+  color: #ffcc22;
+}
+
+.jg-miss {
+  background: rgba(237, 17, 33, 0.12);
+  color: #ed1121;
+}
+
+.results-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  padding: 12px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.results-actions .btn {
+  padding: 10px 24px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.results-actions .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.results-actions .btn.primary {
+  background: #00c2ff;
+  border-color: #00c2ff;
+  color: #00131a;
+}
+
+.results-actions .btn.primary:hover {
+  background: #00d4ff;
+}
+
+/* ===== Loading Menu ===== */
+.loading-menu-root {
+  position: absolute;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.2s linear;
+}
+
+.loading-menu-bg {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform-origin: 50% 50%;
+  opacity: 0.8;
+  pointer-events: none;
+  image-rendering: auto;
+}
+
+.loading-menu-text {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  font-family: 'QuicksandVar', system-ui, sans-serif;
+  font-weight: 600;
+  white-space: pre;
+  pointer-events: none;
+}
+
+.loading-menu-title {
+  font-size: 24px;
+}
+
+.loading-menu-sub {
+  font-size: 14px;
+}
+
+.loading-menu-dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 36px;
+  height: 36px;
+  transform-origin: 50% 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 4px solid rgba(255, 255, 255, 0.95);
+  border-top-color: rgba(255, 255, 255, 0.15);
+  box-sizing: border-box;
+  animation: loading-spin 1s linear infinite;
+}
+
+@keyframes loading-spin {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* ===== Break Overlay ===== */
+.break-overlay-root {
+  position: absolute;
+  z-index: 10001;
+  pointer-events: none;
+  display: none;
+  opacity: 0;
+  transition: opacity 0.18s linear;
+  font-family: 'QuicksandVar', system-ui, sans-serif;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.break-overlay-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.break-number {
+  font-weight: 800;
+  font-size: 56px;
+  line-height: 1;
+}
+
+.break-line {
+  position: absolute;
+  left: 50%;
+  top: calc(50% + 56px);
+  transform: translateX(-50%);
+  height: 6px;
+  width: 400px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.break-line-fill {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 0px;
+  background: #fff;
+  border-radius: 999px;
+}
