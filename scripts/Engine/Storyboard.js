@@ -218,7 +218,7 @@ export default class Storyboard {
       const context = this.pb.osu.audio.audio;
       const source = context.createBufferSource(), gain = context.createGain();
       source.buffer = sample.buffer;
-      gain.gain.value = sample.volume * this.pb.game.masterVolume;
+      gain.gain.value = sample.volume * this.pb.game.effectVolume;
       source.connect(gain).connect(context.destination);
       source.start(0, offset);
       this.sources.add({ source, gain, sample, start: time });

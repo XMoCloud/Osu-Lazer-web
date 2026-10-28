@@ -10,7 +10,7 @@ The game runs on **HTML, CSS and vanilla JavaScript**, with a custom **DOM/SVG r
 
 ![The main menu with its pink osu! logo, radial music visualizer and tutorial shortcut](docs/images/showcase/main-menu.png)
 
-**18 starter mapsets | In-game downloads | Real .osz imports | Saved local scores**
+**17 starter mapsets | In-game downloads | Real .osz imports | Saved local scores**
 
 [Get started](#get-started) | [Controls](#controls) | [Under the hood](#under-the-hood) | [Credits](#credits)
 
@@ -24,7 +24,7 @@ python -m http.server 8765
 
 Open <http://localhost:8765> and click to start. There is no build step or package installation needed to play. Use a current desktop browser with Web Audio, IndexedDB, SVG and `DecompressionStream('deflate-raw')` support.
 
-New to osu!? Click **Play the osu! tutorial** on the main menu. It opens **new beginnings**, the original tutorial map, with storyboard instructions and voice samples. The 18 starter mapsets download in the background, with the tutorial first; you can play installed maps while the rest arrive.
+New to osu!? Click **Play the osu! tutorial** on the main menu. It opens **new beginnings**, the original tutorial map, with storyboard instructions and voice samples. The 17 starter mapsets download in the background, with the tutorial first; you can play installed maps while the rest arrive.
 
 Want to share the game? It can run on **GitHub Pages**. Follow the [hosting instructions](docs/DEPLOYMENT.md).
 
@@ -66,7 +66,7 @@ You can compare previous attempts, retry the map, or return to the library for a
 
 The logo pulses with the music, the radial visualizer reacts to the audio, and the triangle background shifts through colours. Buttons stretch, tilt and bounce on hover, with animated transitions into song selection and gameplay.
 
-The toolbar music player offers playback, seeking and shuffle. Scrolling on the main menu opens the master volume dial, with volume remembered for gameplay too. Settings save your hit keys, mouse-button preference, cursor size and sensitivity. The notification bell collects messages and running downloads, with new notifications appearing below the toolbar.
+The toolbar music player offers playback, seeking and shuffle. Scrolling on the main menu opens the master volume dial, which controls music only and defaults to 15%. Your setting is remembered for menu music, previews and gameplay tracks; hit sounds and other effects keep their own volume. Settings save your hit keys, mouse-button preference, cursor size and sensitivity. The notification bell collects messages and running downloads, with new notifications appearing below the toolbar.
 
 ![The expanded main menu with settings, play, import, browse and exit controls around the logo](docs/images/showcase/menu-controls.png)
 

@@ -26,7 +26,7 @@ import Playback from "../Engine/playback.js";
     showhwmouse: false,
 
     
-    masterVolume: window.osuVolume?.value ?? .38,
+    musicVolume: window.osuVolume?.value ?? .15,
     effectVolume: 1.0,
 
     

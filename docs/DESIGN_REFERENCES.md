@@ -40,8 +40,10 @@ The matching implementation details came from upstream source:
 
 The toolbar music icon opens an artwork-backed transport panel with shuffle,
 previous/play/next, song position and a library shortcut. Wheel input on the main
-menu opens the master volume dial; volume is saved for music, previews, UI sounds
-and gameplay. Song-list and online-browser scrolling remain independent.
+menu opens the master volume dial, which now controls music and previews only,
+including the gameplay track. The default is 15%, with later choices saved under
+`osu:musicVolume`. Hit sounds, UI effects, failure/combo-break sounds and tutorial
+samples use separate effect levels. Song-list and online-browser scrolling remain independent.
 
 ## Settings, notifications and score cards
 

@@ -7,6 +7,7 @@ globalThis.window = { currentFrameInterval: 16 };
 globalThis.AudioContext = class { state = 'running'; };
 const { default: setPlayerActions } = await import('../scripts/Engine/playerActions.js');
 const { default: Osu } = await import('../scripts/Engine/osu.js');
+const { default: Storyboard } = await import('../scripts/Engine/Storyboard.js');
 
 function inputFixture(overrides = {}) {
   const listeners = new Map();
@@ -175,6 +176,35 @@ test('captured mouse deltas apply sensitivity consistently to aim coordinates',(
   }finally{globalThis.document=previousDocument;globalThis.gfx=previousGfx;}
 });
 
+function volumeFixture(saved={}){
+  const storage=new Map(Object.entries(saved)),effect={volume:.6},video={volume:.8},gain={value:.15};
+  const game={musicVolume:.15,effectVolume:.7,scene:{osu:{audio:{gain:{gain}}}}};
+  const context={window:{game,dispatchEvent(){}},document:{getElementById:()=>null,querySelectorAll:()=>[effect,video]},localStorage:{getItem:key=>storage.get(key)??null,setItem:(key,value)=>storage.set(key,value)},CustomEvent};
+  vm.runInNewContext(fs.readFileSync(new URL('../scripts/UI/volume.js',import.meta.url),'utf8'),context);
+  return{volume:context.window.osuVolume,game,gain,effect,video,storage};
+}
+
+test('music defaults to 15 percent and muting leaves effects and video unchanged',()=>{
+  const {volume,game,gain,effect,video,storage}=volumeFixture({'osu:masterVolume':'.9'});
+  assert.equal(volume.value,.15,'the former combined master setting does not override the new music default');
+  volume.set(0);assert.equal(game.musicVolume,0);assert.equal(gain.value,0);assert.equal(game.effectVolume,.7);assert.equal(effect.volume,.6);assert.equal(video.volume,.8);
+  volume.toggleMute();assert.equal(volume.value,.15);assert.equal(gain.value,.15);assert.equal(storage.get('osu:musicVolume'),'0.15');
+});
+
+test('music volume preserves saved choices including mute',()=>{
+  assert.equal(volumeFixture({'osu:musicVolume':'.27'}).volume.value,.27);
+  const {volume}=volumeFixture({'osu:musicVolume':'0'});assert.equal(volume.value,0);volume.toggleMute();assert.equal(volume.value,.15);
+});
+
+test('tutorial samples use effect volume regardless of the music setting',()=>{
+  for(const musicVolume of[0,1]){
+    const gain={gain:{value:0},connect(){}},source={connect:node=>node,start(){}};
+    const storyboard={destroyed:false,sprites:[],samples:[{time:0,volume:.8,buffer:{duration:1}}],sources:new Set(),pb:{game:{musicVolume,effectVolume:.4},osu:{audio:{audio:{createBufferSource:()=>source,createGain:()=>gain,destination:{}}}}}};
+    Storyboard.prototype.update.call(storyboard,0);
+    assert.ok(Math.abs(gain.gain.value-.32)<.00001);
+  }
+});
+
 function musicFixture(){
   class Events{
     listeners=new Map();
@@ -200,7 +230,7 @@ function musicFixture(){
     async resume(){this.state='running';}close(){this.closed++;this.state='closed';}
   }
   const audio=new Media(),win=new Events(),doc=new Events(),changes=[];
-  win.AudioContext=Context;win.osuVolume={value:.38};
+  win.AudioContext=Context;win.osuVolume={value:.15};
   doc.getElementById=id=>id==='bgm'?audio:{classList:{toggle(){}},setAttribute(){}};
   doc.addEventListener('osu:track-changed',event=>changes.push(event.detail));
   const context={window:win,document:doc,Audio:Media,CustomEvent:class{constructor(type,options={}){this.type=type;this.detail=options.detail;}},setTimeout:callback=>setTimeout(callback,0)};
@@ -239,7 +269,7 @@ test('a failed CORS preview falls back to native playback and honors master volu
   const {music,audio,preview,directPreview,win}=musicFixture();await music.playMap('a');
   preview.play=async()=>{throw new Error('CORS preview unavailable');};
   await music.playPreview({id:'123',preview_url:'proxy.ogg',preview_fallback:'official.ogg'});
-  assert.equal(directPreview.src,'official.ogg');assert.equal(directPreview.paused,false);assert.equal(audio.paused,true);assert.equal(music.playing,true);assert.equal(directPreview.volume,.38);
+  assert.equal(directPreview.src,'official.ogg');assert.equal(directPreview.paused,false);assert.equal(audio.paused,true);assert.equal(music.playing,true);assert.equal(directPreview.volume,.15);
   win.fire('osu:volume-changed',{detail:{value:.2}});assert.equal(directPreview.volume,.2);
   music.suspend();assert.equal(directPreview.paused,true);assert.equal(music.playing,false);
 });

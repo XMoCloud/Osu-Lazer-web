@@ -1,7 +1,8 @@
-/* Shared master volume: menu, preview, UI sounds and gameplay use one persisted value. */
+/* The master dial controls music only; UI sounds and gameplay effects are separate. */
 (() => {
-  const key = 'osu:masterVolume';
-  let value = .38, lastAudible = .38;
+  // This setting has a different scope from the former combined master volume.
+  const key = 'osu:musicVolume';
+  let value = .15, lastAudible = .15;
   try {
     const saved = localStorage.getItem(key);
     if (saved !== null && Number.isFinite(Number(saved))) value = Math.max(0,Math.min(1,Number(saved)));
@@ -11,12 +12,13 @@
     value = Math.round(Math.max(0,Math.min(1,Number(next) || 0))*100)/100;
     if (value > 0) lastAudible = value;
     try { localStorage.setItem(key,String(value)); } catch {}
-    document.querySelectorAll('audio:not(#bgm), video').forEach(sound => { sound.volume = value; });
+    if (window.game) window.game.musicVolume = value;
+    const gameplayGain = window.game?.scene?.osu?.audio?.gain?.gain;
+    if (gameplayGain) gameplayGain.value = value;
     window.dispatchEvent(new CustomEvent('osu:volume-changed',{detail:{value}}));
     return value;
   }
   window.osuVolume = { get value() { return value; }, set, toggleMute() { set(value > 0 ? 0 : lastAudible); } };
-  document.querySelectorAll('audio:not(#bgm), video').forEach(sound => { sound.volume = value; });
   const overlay = document.getElementById('volumeOverlay');
   if (!overlay) return;
   const meter = document.getElementById('volumeMeter');

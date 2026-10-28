@@ -21,7 +21,7 @@
       main.hidden=true;top.hidden=true;window.osuTransitions.clear();
       window.osuTransitions.showLoader(map,diff);const shownAt=performance.now();
       await loadEngine();if(token!==generation)return;
-      window.osuSettings.applyToGame(window.game);window.game.masterVolume=window.osuVolume.value;window.game.finished=false;window.game.paused=false;
+      window.osuSettings.applyToGame(window.game);window.game.musicVolume=window.osuVolume.value;window.game.finished=false;window.game.paused=false;
       window.currentGameSession={mapId:String(map.id),diffName:diff.name,diffBid:String(diff.bid||''),title:map.title,artist:map.artist,creator:diff.creator||map.creator||'',tutorial:String(map.id)==='1011011'&&String(diff.bid)==='2116202'};
       sessionStorage.setItem('osu:lastSession',JSON.stringify(window.currentGameSession));
       window.game.prepareGameplay=async()=>{

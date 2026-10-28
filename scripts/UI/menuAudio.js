@@ -12,7 +12,7 @@
   function connect(){
     if(context){if(context.state==='suspended')context.resume().catch(()=>{});return;}
     context=new(window.AudioContext||window.webkitAudioContext)();analyser=context.createAnalyser();analyser.fftSize=512;analyser.smoothingTimeConstant=0;
-    mainGain=context.createGain();previewGain=context.createGain();masterGain=context.createGain();mainGain.gain.value=1;previewGain.gain.value=0;masterGain.gain.value=window.osuVolume?.value??.38;
+    mainGain=context.createGain();previewGain=context.createGain();masterGain=context.createGain();mainGain.gain.value=1;previewGain.gain.value=0;masterGain.gain.value=window.osuVolume?.value??.15;
     context.createMediaElementSource(audio).connect(mainGain);context.createMediaElementSource(preview).connect(previewGain);
     mainGain.connect(analyser);previewGain.connect(analyser);analyser.connect(masterGain);masterGain.connect(context.destination);context.resume().catch(()=>{});
   }
@@ -72,7 +72,7 @@
       catch(error){
         if(token!==previewGeneration)return;
         if(!set.preview_fallback||error.name==='NotAllowedError')throw error;
-        preview.pause();previewMedia=directPreview;directPreview.volume=window.osuVolume?.value??.38;directPreview.src=set.preview_fallback;
+        preview.pause();previewMedia=directPreview;directPreview.volume=window.osuVolume?.value??.15;directPreview.src=set.preview_fallback;
         await directPreview.play();if(token!==previewGeneration)return;
       }
       document.dispatchEvent(new CustomEvent('osu:preview-changed',{detail:{id:previewId,playing:true}}));playbackState();

@@ -27,9 +27,11 @@ node --test tests/regressions.mjs
 These use Node's built-in test runner and cover input state, parser defaults,
 ruleset filtering, malformed archives, duplicate downloads, cancellation and
 retry, and long-running beat-phase alignment across tempo changes. No testing dependencies are added to the game.
-The 21 checks also cover intro retirement, menu/selection playback positions,
+The 24 checks also cover intro retirement, menu/selection playback positions,
 transport map events, rapid track changes, gameplay handoff, audio restoration,
-no-video fallback policy, and native preview fallback with master volume.
+no-video fallback policy, and native preview fallback with master volume. They
+also check the 15% music default, saved music settings, independent effects and
+tutorial-sample volume. The old combined master setting does not carry over.
 
 `tests/browser-smoke.cjs` is a development-only browser check. Install Playwright
 outside this repository, then set `OSU_PLAYWRIGHT_PATH` to that installation,
