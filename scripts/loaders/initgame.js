@@ -27,7 +27,8 @@ import Playback from "../Engine/playback.js";
 
     
     musicVolume: window.osuVolume?.value ?? .15,
-    effectVolume: 1.0,
+    hitSoundVolume: 0.3,
+    effectVolume: 0.5,
 
     
     allowMouseButton: true,

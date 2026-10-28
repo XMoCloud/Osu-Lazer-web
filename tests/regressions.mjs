@@ -159,6 +159,20 @@ test('saved input preferences are validated and applied to gameplay',()=>{
   settings.update({key2:'KeyA',key2KeyCode:65});assert.notEqual(settings.value.key1,settings.value.key2);
 });
 
+test('audio preferences persist, clamp, apply live and restore their defaults',()=>{
+  const storage=new Map([['osu:settings',JSON.stringify({hitSoundVolume:.12,effectVolume:.34})]]);
+  const ui={volume:1},sampleGain={value:1};
+  const game={scene:{storyboard:{sources:new Set([{sample:{volume:.8},gain:{gain:sampleGain}}])}},sampleComboBreak:{volume:1}};
+  const context={window:{game,dispatchEvent(){}},document:{querySelectorAll:()=>[ui]},localStorage:{getItem:key=>storage.get(key)||null,setItem:(key,value)=>storage.set(key,value)},CustomEvent};
+  vm.runInNewContext(fs.readFileSync(new URL('../scripts/UI/settings.js',import.meta.url),'utf8'),context);
+  const settings=context.window.osuSettings;
+  assert.equal(game.hitSoundVolume,.12);assert.equal(game.effectVolume,.34);assert.equal(ui.volume,.34);
+  settings.update({hitSoundVolume:2,effectVolume:0});assert.equal(game.hitSoundVolume,1);assert.equal(game.effectVolume,0);assert.equal(ui.volume,0);assert.equal(sampleGain.value,0);assert.equal(game.sampleComboBreak.volume,0);
+  const nextGame={};settings.applyToGame(nextGame);assert.equal(nextGame.hitSoundVolume,1);assert.equal(nextGame.effectVolume,0);
+  assert.equal(JSON.parse(storage.get('osu:settings')).effectVolume,0);
+  settings.reset();assert.equal(game.hitSoundVolume,.3);assert.equal(game.effectVolume,.5);assert.equal(ui.volume,.5);assert.equal(sampleGain.value,.4);
+});
+
 test('custom physical hit keys work and disabled mouse buttons have no click handler',()=>{
   const fixture=inputFixture();fixture.game.K1code='KeyA';fixture.game.K2code='KeyS';
   fixture.key(90);assert.equal(fixture.hits.length,0);

@@ -186,7 +186,7 @@ export default (function () {
       if (result === 0) {
         this.fullcombo = false;
         if (oldCombo > 20 && window.game?.sampleComboBreak) {
-          window.game.sampleComboBreak.volume = window.game.effectVolume ?? 1;
+          window.game.sampleComboBreak.volume = window.game.effectVolume ?? .5;
           window.game.sampleComboBreak.play();
         }
       }

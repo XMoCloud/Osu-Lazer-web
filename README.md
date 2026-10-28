@@ -1,5 +1,7 @@
 # osu! Web
 
+**[Play online](https://xmocloud.github.io/Osu-Lazer-web/)** | [Source code on GitHub](https://github.com/XMoCloud/Osu-Lazer-web)
+
 **osu!** is a rhythm game where you click circles to the beat of songs you like. Its standard mode also includes sliders that you hold and follow, and spinners that you move around. Community-made levels, called **beatmaps**, determine the patterns and timing for each song, with different difficulties to choose from.
 
 This project recreates **osu!standard in the browser**, with an interface inspired by **osu!lazer**. You can play real community beatmaps, download more songs in-game, and keep track of your scores.
@@ -16,17 +18,11 @@ The game runs on **HTML, CSS and vanilla JavaScript**, with a custom **DOM/SVG r
 
 ## Get started
 
-From the project folder, start a static server:
-
-```sh
-python -m http.server 8765
-```
-
-Open <http://localhost:8765> and click to start. There is no build step or package installation needed to play. Use a current desktop browser with Web Audio, IndexedDB, SVG and `DecompressionStream('deflate-raw')` support.
+Open **[osu! Web](https://xmocloud.github.io/Osu-Lazer-web/)** and click to start. The game is hosted on **GitHub Pages**; there is nothing to install or build to play. Use a current desktop browser with Web Audio, IndexedDB, SVG and `DecompressionStream('deflate-raw')` support.
 
 New to osu!? Click **Play the osu! tutorial** on the main menu. It opens **new beginnings**, the original tutorial map, with storyboard instructions and voice samples. The 17 starter mapsets download in the background, with the tutorial first; you can play installed maps while the rest arrive.
 
-Want to share the game? It can run on **GitHub Pages**. Follow the [hosting instructions](docs/DEPLOYMENT.md).
+The project is available at **[XMoCloud/Osu-Lazer-web](https://github.com/XMoCloud/Osu-Lazer-web)**. See the [deployment notes](docs/DEPLOYMENT.md) for maintaining the hosted site.
 
 ## Gameplay
 
@@ -66,7 +62,9 @@ You can compare previous attempts, retry the map, or return to the library for a
 
 The logo pulses with the music, the radial visualizer reacts to the audio, and the triangle background shifts through colours. Buttons stretch, tilt and bounce on hover, with animated transitions into song selection and gameplay.
 
-The toolbar music player offers playback, seeking and shuffle. Scrolling on the main menu opens the master volume dial, which controls music only and defaults to 15%. Your setting is remembered for menu music, previews and gameplay tracks; hit sounds and other effects keep their own volume. Settings save your hit keys, mouse-button preference, cursor size and sensitivity. The notification bell collects messages and running downloads, with new notifications appearing below the toolbar.
+The toolbar music player offers playback, seeking and shuffle. Scrolling on the main menu opens the master volume dial, which controls music only and defaults to 15%. Your setting is remembered for menu music, previews and gameplay tracks; hit sounds default to 30%, while menu sounds and other effects default to 50%.
+
+**Settings ? Audio** lets you adjust music, hit sounds and other effects independently from 0?100%. Changes take effect immediately and are saved between visits. The music slider stays linked to the main-menu volume dial. **Restore defaults** returns audio to 15% music, 30% hit sounds and 50% effects, along with the other settings. Settings also save your hit keys, mouse-button preference, cursor size and sensitivity. The notification bell collects messages and running downloads, with new notifications appearing below the toolbar.
 
 ![The expanded main menu with settings, play, import, browse and exit controls around the logo](docs/images/showcase/menu-controls.png)
 

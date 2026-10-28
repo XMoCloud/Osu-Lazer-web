@@ -18,7 +18,7 @@
     window.dispatchEvent(new CustomEvent('osu:volume-changed',{detail:{value}}));
     return value;
   }
-  window.osuVolume = { get value() { return value; }, set, toggleMute() { set(value > 0 ? 0 : lastAudible); } };
+  window.osuVolume = { get value() { return value; }, set, reset() { return set(.15); }, toggleMute() { set(value > 0 ? 0 : lastAudible); } };
   const overlay = document.getElementById('volumeOverlay');
   if (!overlay) return;
   const meter = document.getElementById('volumeMeter');

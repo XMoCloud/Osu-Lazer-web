@@ -6,6 +6,7 @@
     const rad=(tooth*45+angle)*Math.PI/180;gearPoints.push(`${(12+Math.cos(rad)*radius).toFixed(2)},${(12+Math.sin(rad)*radius).toFixed(2)}`);
   }
   const icons={settings:svg(`<path d="M${gearPoints.join('L')}Z"/><circle cx="12" cy="12" r="3.4"/>`),bell:svg('<path d="M5 10a7 7 0 0 1 14 0c0 7 3 7 3 8H2c0-1 3-1 3-8m4 11h6"/>'),home:svg('<path d="m3 10 9-7 9 7M5 9v12h14V9"/>'),close:svg('<path d="m6 6 12 12M6 18 18 6"/>'),check:svg('<path d="m5 12 5 5L20 6"/>'),info:svg('<circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v1"/>'),download:svg('<path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/>'),keyboard:svg('<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M5 9h1m3 0h1m3 0h1m3 0h1M5 12h1m3 0h1m3 0h1m3 0h1M7 16h10"/>'),cursor:svg('<path d="m5 2 14 12-7 1-3 7z"/>'),shuffle:svg('<path d="M3 6h3c5 0 7 12 12 12h3m-4-4 4 4-4 4M3 18h3c2 0 3-2 4-4m4-4c1-2 2-4 4-4h3m-4-4 4 4-4 4"/>'),back:svg('<path d="m15 4-8 8 8 8"/>'),folder:svg('<path d="M3 6h7l2 3h9v12H3z"/>'),play:svg('<circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4z"/>')};
+  icons.audio=svg('<path d="M3 9h4l5-5v16l-5-5H3zM16 8q5 4 0 8M19 5q8 7 0 14"/>');
   window.osuIcons=icons;
   const makeButton=(id,label,icon)=>`<button id="${id}" type="button" class="toolbarButton" aria-label="${label}">${icons[icon]}</button>`;
   let toolbar=document.getElementById('topBar');
@@ -22,12 +23,18 @@
   if(menuSettings)menuSettings.setAttribute('aria-label','Settings');
   if(menuSettings)menuSettings.innerHTML=`<span class="menuSettingsContent">${icons.settings}<span>settings</span></span>`;
   const shell=document.createElement('div');shell.id='shellOverlays';
+  const audioControls=[
+    ['musicVolume','Music','Menu music, song previews and beatmap music. Linked to the main-menu volume dial.'],
+    ['hitSoundVolume','Hit sounds','Circle hits, slider ticks and spinner hits.'],
+    ['effectVolume','Other effects','Menu sounds, combo breaks, failure sounds and tutorial audio.']
+  ];
+  const audioSection=`<section id="audioSettings" class="settingsSection"><h2>Audio</h2><h3>Volume</h3>${audioControls.map(([key,label,hint])=>`<div class="rangeSetting" data-search="audio volume ${label.toLowerCase()} ${hint.toLowerCase()}"><label for="${key}">${label}<output id="${key}Value" for="${key}"></output></label><input id="${key}" type="range" min="0" max="100" step="1"/><p>${hint}</p></div>`).join('')}</section>`;
   shell.innerHTML=`<div id="shellScrim" hidden></div>
     <section id="settingsPanel" class="sidePanel settingsPanel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle" hidden>
-      <nav class="settingsNav" aria-label="Settings categories"><button type="button" data-section="inputSettings" class="active">${icons.keyboard}<span>Input</span></button><button type="button" data-section="cursorSettings">${icons.cursor}<span>Cursor</span></button></nav>
+      <nav class="settingsNav" aria-label="Settings categories"><button type="button" data-section="inputSettings" class="active">${icons.keyboard}<span>Input</span></button><button type="button" data-section="cursorSettings">${icons.cursor}<span>Cursor</span></button><button type="button" data-section="audioSettings" aria-label="Audio settings">${icons.audio}<span>Audio</span></button></nav>
       <div class="settingsBody"><header class="settingsHeader"><button class="panelClose" type="button" aria-label="Close settings">${icons.close}</button><h1 id="settingsTitle">settings</h1><p>change the way osu! behaves</p><input id="settingsSearch" type="search" placeholder="type to search" aria-label="Search settings"/></header>
       <div class="settingsScroll"><section id="inputSettings" class="settingsSection"><h2>Input</h2><h3>Keyboard</h3><div class="settingRow" data-search="keyboard key binding input"><span>Primary hit key</span><button class="keyBinding" id="bindKey1" type="button" data-binding="1"></button></div><div class="settingRow" data-search="keyboard key binding input"><span>Secondary hit key</span><button class="keyBinding" id="bindKey2" type="button" data-binding="2"></button></div><p id="bindingHint" role="status">Select a key to change its binding.</p><h3>Mouse</h3><label class="settingRow" data-search="disable mouse buttons clicks input"><span>Disable mouse buttons in gameplay</span><input id="disableMouseButtons" type="checkbox" class="toggleSwitch"/></label></section>
-      <section id="cursorSettings" class="settingsSection"><h2>Cursor</h2><div class="rangeSetting" data-search="cursor size"><label for="cursorSize">Cursor size <output id="cursorSizeValue"></output></label><input id="cursorSize" type="range" min="0.5" max="2" step="0.05"/><div class="cursorPreview"><img src="assets/cursor.png" alt="Cursor size preview"/></div></div><div class="rangeSetting" data-search="cursor sensitivity mouse"><label for="cursorSensitivity">Cursor sensitivity <output id="cursorSensitivityValue"></output></label><input id="cursorSensitivity" type="range" min="0.4" max="3" step="0.05"/><p>Custom sensitivity captures the mouse during play. Press Esc to pause.</p></div></section><button id="resetInputSettings" type="button">Restore defaults</button></div></div>
+      <section id="cursorSettings" class="settingsSection"><h2>Cursor</h2><div class="rangeSetting" data-search="cursor size"><label for="cursorSize">Cursor size <output id="cursorSizeValue"></output></label><input id="cursorSize" type="range" min="0.5" max="2" step="0.05"/><div class="cursorPreview"><img src="assets/cursor.png" alt="Cursor size preview"/></div></div><div class="rangeSetting" data-search="cursor sensitivity mouse"><label for="cursorSensitivity">Cursor sensitivity <output id="cursorSensitivityValue"></output></label><input id="cursorSensitivity" type="range" min="0.4" max="3" step="0.05"/><p>Custom sensitivity captures the mouse during play. Press Esc to pause.</p></div></section>${audioSection}<button id="resetInputSettings" type="button">Restore defaults</button></div></div>
     </section>
     <section id="notificationsPanel" class="sidePanel notificationsPanel" role="dialog" aria-modal="true" aria-label="Notifications" hidden><button class="panelClose" type="button" aria-label="Close notifications">${icons.close}</button><header class="notificationHeading"><h2>NOTIFICATIONS <span id="notificationCount">0</span></h2><button id="clearNotifications" type="button">CLEAR ALL</button></header><div id="notificationHistory"></div><header class="notificationHeading"><h2>RUNNING TASKS <span id="taskCount">0</span></h2><button id="cancelTasks" type="button">CANCEL ALL</button></header><div id="runningTasks"></div></section>
     <div id="notificationToasts" aria-live="polite" aria-relevant="additions"></div>`;
@@ -61,18 +68,31 @@
   if(menuSettings)menuSettings.onclick=()=>open('settings',menuSettings);
   scrim.onclick=close;shell.querySelectorAll('.panelClose').forEach(button=>button.onclick=close);
   const formatKey=code=>code.replace(/^Key/,'').replace(/^Digit/,'').replace(/^Numpad/,'Num ').replace('Space','Space');
+  function renderAudio(){
+    const state=window.osuSettings.value;
+    for(const[key]of audioControls){
+      const percent=Math.round((key==='musicVolume'?window.osuVolume.value:state[key])*100),input=document.getElementById(key);
+      input.value=percent;input.setAttribute('aria-valuetext',percent+'%');document.getElementById(key+'Value').value=percent+'%';
+    }
+  }
   function renderSettings(){
     const state=window.osuSettings.value;
     for(const n of [1,2]){const button=document.getElementById('bindKey'+n);button.textContent=binding===n?'Press a key…':formatKey(state['key'+n]);button.classList.toggle('listening',binding===n);}
     document.getElementById('disableMouseButtons').checked=state.disableMouseButtons;
     for(const key of ['cursorSize','cursorSensitivity']){document.getElementById(key).value=state[key];document.getElementById(key+'Value').value=Number(state[key]).toFixed(2)+'x';}
     settings.querySelector('.cursorPreview img').style.width=48*state.cursorSize+'px';
+    renderAudio();
   }
   for(const n of [1,2])document.getElementById('bindKey'+n).onclick=()=>{binding=n;document.getElementById('bindingHint').textContent='Press a key. Esc cancels.';renderSettings();};
   document.getElementById('disableMouseButtons').onchange=event=>window.osuSettings.update({disableMouseButtons:event.target.checked});
   for(const key of ['cursorSize','cursorSensitivity'])document.getElementById(key).oninput=event=>window.osuSettings.update({[key]:Number(event.target.value)});
+  for(const[key]of audioControls)document.getElementById(key).oninput=event=>{
+    const value=Number(event.target.value)/100;
+    if(key==='musicVolume')window.osuVolume.set(value);else window.osuSettings.update({[key]:value});
+  };
   window.addEventListener('osu:settings-changed',renderSettings);
-  document.getElementById('resetInputSettings').onclick=()=>{binding=null;window.osuSettings.reset();};
+  window.addEventListener('osu:volume-changed',renderAudio);
+  document.getElementById('resetInputSettings').onclick=()=>{binding=null;window.osuSettings.reset();window.osuVolume.reset();};
   document.getElementById('settingsSearch').oninput=event=>{
     const query=event.target.value.trim().toLowerCase();settings.querySelectorAll('[data-search]').forEach(row=>row.hidden=!row.dataset.search.includes(query));
   };

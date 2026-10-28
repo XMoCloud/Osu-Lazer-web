@@ -634,7 +634,7 @@ import Storyboard from "./Storyboard.js";
         while (self.curtimingid + 1 < self.track.timingPoints.length && self.track.timingPoints[self.curtimingid + 1].offset <= time) self.curtimingid++;
         while (self.curtimingid > 0 && self.track.timingPoints[self.curtimingid].offset > time) self.curtimingid--;
         const timing = self.track.timingPoints[self.curtimingid];
-        const volume = self.game.effectVolume * (hit.hitSample.volume || timing.volume) / 100;
+        const volume = self.game.hitSoundVolume * (hit.hitSample.volume || timing.volume) / 100;
         const defSet = timing.sampleSet || self.game.sampleSet;
         self.game.sample[defSet].slidertick.volume = volume;
         self.game.sample[defSet].slidertick.play();
@@ -644,7 +644,7 @@ import Storyboard from "./Storyboard.js";
         while (self.curtimingid + 1 < self.track.timingPoints.length && self.track.timingPoints[self.curtimingid + 1].offset <= time) self.curtimingid++;
         while (self.curtimingid > 0 && self.track.timingPoints[self.curtimingid].offset > time) self.curtimingid--;
         const timing = self.track.timingPoints[self.curtimingid];
-        const volume = self.game.effectVolume * (hit.hitSample.volume || timing.volume) / 100;
+        const volume = self.game.hitSoundVolume * (hit.hitSample.volume || timing.volume) / 100;
         const defSet = timing.sampleSet || self.game.sampleSet;
         function playHit(bitmask, normalSet, additionSet) {
           self.game.sample[normalSet].hitnormal.volume = volume; self.game.sample[normalSet].hitnormal.play();
