@@ -55,6 +55,7 @@ export default (function () {
       this.fullcombo = true;
       this.onfail = null;
       this.judgecnt = { great: 0, good: 0, meh: 0, miss: 0 };
+      this.sliderTicks = { hit:0,total:0 };
 
       this.score4display = new LazyNumber(this.score);
       this.combo4display = new LazyNumber(this.combo);
@@ -167,6 +168,7 @@ export default (function () {
     }
 
     hit(result, maxresult, time) {
+      if(maxresult===10){this.sliderTicks.total++;if(result>0)this.sliderTicks.hit++;}
       if (maxresult === 300) {
         if (result === 300) this.judgecnt.great++;
         if (result === 100) this.judgecnt.good++;
@@ -189,7 +191,7 @@ export default (function () {
         }
       }
       this.maxcombo = Math.max(this.maxcombo, this.combo);
-      if (this.HP >= 0) this.HP += this.HPincreasefor(result);
+      if (this.HP >= 0) this.HP += maxresult === 10 ? this.HPincreasefor(result ? 300 : 0) * .1 : this.HPincreasefor(result);
       this.HP = Math.min(1, this.HP);
 
       this.score4display.set(time, this.score);
@@ -246,6 +248,7 @@ export default (function () {
       const diffVersion = sessionInfo.diffName || (metadata && metadata.Version) || '';
 
       const summary = {
+        resultId: crypto.randomUUID(),
         mapId: sessionInfo.mapId || null,
         diffName: diffVersion ? String(diffVersion).trim() : '',
   diffBid: sessionInfo.diffBid ? String(sessionInfo.diffBid) : null,
@@ -265,6 +268,7 @@ export default (function () {
         },
         errorText: errortext(hiterrors),
         hitErrors: hiterrors || [],
+        sliderTicks: {...this.sliderTicks},
         mods: "",
         timestamp: Date.now()
       };
@@ -283,13 +287,18 @@ export default (function () {
               if (map) {
                 map.leaderboard = map.leaderboard || [];
                 const entry = {
-                  timestamp: Date.now(),
+                  resultId: summary.resultId,
+                  timestamp: summary.timestamp,
                   player: 'osuPlayer1',
                   pfp: 'assets/pfp.png',
                   combo: summary.combo || 0,
                   accuracy: summary.accuracy || 0,
                   score: summary.score || 0,
                   rank: summary.rank || '',
+                  counts: {...summary.counts},
+                  sliderTicks: {...summary.sliderTicks},
+                  fullCombo: summary.fullCombo,
+                  errorText: summary.errorText,
                   diffName: String(summary.diffName || session.diffName || '').trim(),
                   diffBid: (summary.diffBid || session.diffBid || null) ? String(summary.diffBid || session.diffBid) : null
                 };

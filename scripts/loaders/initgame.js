@@ -26,11 +26,11 @@ import Playback from "../Engine/playback.js";
     showhwmouse: false,
 
     
-    masterVolume: 0.7,
+    masterVolume: window.osuVolume?.value ?? .38,
     effectVolume: 1.0,
 
     
-    allowMouseButton: false,
+    allowMouseButton: true,
     allowMouseScroll: true,
     K1keycode: 90,
     K2keycode: 88,
@@ -55,6 +55,7 @@ import Playback from "../Engine/playback.js";
   window.game = game;
 
   if (window.gamesettings) window.gamesettings.loadToGame();
+  window.osuSettings?.applyToGame(game);
 
   
   window.skinReady = false;
@@ -137,7 +138,9 @@ import Playback from "../Engine/playback.js";
     });
   }
   
-  AudioEngine.loadSfx(sample).then(function(map){
+  window.osuSoundReady = AudioEngine.loadSfx(sample).then(function(map){
+    const silent = { volume: 0, play() {} };
+    sample.forEach(path => { map[path] ||= silent; });
     game.sample[1].hitnormal = map[sample[0]];
     game.sample[1].hitwhistle = map[sample[1]];
     game.sample[1].hitfinish = map[sample[2]];

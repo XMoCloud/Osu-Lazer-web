@@ -3,6 +3,7 @@ import SliderMesh from "./SliderMesh.js";
 import ScoreOverlay from "../overlay/score.js";
 import LoadingMenu from "../overlay/loading.js";
 import BreakOverlay from "../overlay/break.js";
+import Storyboard from "./Storyboard.js";
 
 "use strict";
 
@@ -19,9 +20,11 @@ import BreakOverlay from "../overlay/break.js";
     let cursorPortal = null, cursorNode = null;
 
     function ensureCursorPortal() {
-      if (cursorPortal) return cursorPortal;
+      if(document.body.classList.contains('results-visible'))return cursorPortal;
+      if (cursorPortal) { cursorPortal.style.display = ''; return cursorPortal; }
 
       cursorPortal = document.createElement("div");
+      cursorPortal.id='cursorPortal';
       Object.assign(cursorPortal.style, {
         position: "fixed",
         left: "0", top: "0",
@@ -65,7 +68,7 @@ import BreakOverlay from "../overlay/break.js";
 
     function pxHalf(node) {
       
-      const ow = node.offsetWidth || parseFloat(node.style.width) || node.width || 64;
+      const ow = parseFloat(node.style.width) || node.width || 64;
       return ow / 2;
     }
 
@@ -78,6 +81,10 @@ import BreakOverlay from "../overlay/break.js";
 
     function updateCursorPortal(game, gfx) {
       if (!cursorPortal || !cursorNode) return;
+      if(cursorNode.dataset.scale!==String(game.cursorSize)){
+        const size=Math.round(64*Math.max(.5,Math.min(2,game.cursorSize||1))*2.3);
+        cursorNode.style.width=cursorNode.style.height=size+'px';cursorNode.dataset.scale=String(game.cursorSize);
+      }
       const p = osuToViewportPx(game.mouseX, game.mouseY, gfx);
       const half = pxHalf(cursorNode);
       cursorNode.style.transform = `translate(${(p.x - half).toFixed(2)}px, ${(p.y - half).toFixed(2)}px)`;
@@ -85,6 +92,7 @@ import BreakOverlay from "../overlay/break.js";
 
     function svgEl(tag, attrs = {}, parent) {
       const e = document.createElementNS(SVG_NS, tag);
+      e.setAttribute('focusable','false');
       for (const k in attrs) e.setAttribute(k, attrs[k]);
       if (parent) parent.appendChild(e);
       return e;
@@ -119,10 +127,10 @@ import BreakOverlay from "../overlay/break.js";
         img.setAttribute("opacity", String(Math.max(0, Math.min(1, img._alpha))));
       }
       img._apply   = apply;
-      img._setAlpha= (a) => { img._alpha = a; apply(); };
-      img._setScale= (s) => { img._scale = s; apply(); };
-      img._setXY   = (nx, ny) => { img._x = nx; img._y = ny; apply(); };
-      img._setRot  = (r) => { img._rot = r; apply(); };
+      img._setAlpha= (a) => { if (img._alpha !== a) { img._alpha = a; img.setAttribute('opacity', String(clamp01(a))); } };
+      img._setScale= (s) => { if (img._scale !== s) { img._scale = s; apply(); } };
+      img._setXY   = (nx, ny) => { if (img._x !== nx || img._y !== ny) { img._x = nx; img._y = ny; apply(); } };
+      img._setRot  = (r) => { if (img._rot !== r) { img._rot = r; apply(); } };
       img._hide    = () => { img._alpha = 0; apply(); };
       img._show    = () => { img._alpha = 1; apply(); };
 
@@ -141,10 +149,19 @@ import BreakOverlay from "../overlay/break.js";
       window.playback = this;
 
       self.game = game; self.osu = osu; self.track = track;
+      self.failed = false;
+      self.destroyed = false;
+      self.tutorial = Boolean(window.currentGameSession?.tutorial);
+      self.noFail = self.tutorial || self.track.difficulty.HPDrainRate === 0;
+      self.hitErrors = [];
 
       
       const host = document.getElementById("game-area") || document.body;
-      host.style.position = "relative";
+      host.style.position = "fixed";
+      host.style.inset = '0';
+      host.style.width = '100vw';
+      host.style.height = '100vh';
+      host.style.background = 'transparent';
       host.style.overflow = "visible";
 
       
@@ -210,7 +227,7 @@ import BreakOverlay from "../overlay/break.js";
 
    
       self.playbackRate = 1.0;
-      self.endTime = self.hits[self.hits.length - 1].endTime + 1500;
+      self.endTime = Math.max(...self.hits.map(hit => hit.endTime)) + 1500;
       self.wait = Math.max(0, 1500 - self.hits[0].time);
 
       
@@ -281,9 +298,18 @@ import BreakOverlay from "../overlay/break.js";
       setPlayerActions(self);
 
       
-      self.osu.onready = function () {
+      self.storyboard = new Storyboard(self, host);
+      self.osu.onready = async function () {
+        if(self.destroyed)return;
+        await self.storyboard.load();
+        if (self.destroyed) return;
+        self.endTime = Math.max(self.endTime, self.storyboard.endTime);
+        self.scoreOverlay.totalDurationMs = self.endTime;
         self.loadingMenu.hide();
         self.audioReady = true;
+        if(self.game.prepareGameplay)await self.game.prepareGameplay();
+        if(self.destroyed)return;
+        host.style.opacity='';
         if (self.onload) self.onload();
         self.start();
 
@@ -296,8 +322,12 @@ import BreakOverlay from "../overlay/break.js";
       
       self.game.paused = false;
       this.pause = function () {
+        if (self.failed || self.ended || !self.audioReady || !self.started) return;
         if (self.osu.audio.pause()) {
           self.game.paused = true;
+          if(document.pointerLockElement===host)document.exitPointerLock();
+          self.storyboard.pause();
+          self.game.K1down = self.game.K2down = self.game.M1down = self.game.M2down = self.game.down = false;
           const menu = document.getElementById("pause-menu");
           if (menu) {
             menu.removeAttribute("hidden");
@@ -311,8 +341,10 @@ import BreakOverlay from "../overlay/break.js";
         }
       };
       this.resume = function () {
+        if (self.failed || self.ended || !self.audioReady || self.destroyed) return;
         self.osu.audio.play();
         self.game.paused = false;
+        if(self.game.cursorSensitivity!==1 && !self.pointerLockDeclined)host.requestPointerLock?.()?.catch?.(()=>{});
         try { document.getElementById("pause-menu").setAttribute("hidden",""); } catch (e) {}
         ensureCursorPortal();
         updateCursorPortal(self.game, gfx);
@@ -322,17 +354,8 @@ import BreakOverlay from "../overlay/break.js";
       
       (function setBackgroundFromEvents() {
         
-        let bgName = null;
-        if (self.track.events && self.track.events.length) {
-          let f = self.track.events[0][2];
-          if (self.track.events[0][0] === "Video" && self.track.events.length > 1) f = self.track.events[1][2];
-          if (typeof f === "string") {
-            
-            const m = f.match(/^"(.*)"$/);
-            if (m) bgName = m[1];
-            else bgName = f;
-          }
-        }
+        const backgroundEvent = self.track.events?.find(event => event[0]?.trim() === '0');
+        const bgName = backgroundEvent?.[2]?.replace(/^"|"$/g, '') || null;
         if (bgName) {
           const entry = self.osu.zip.getChildByName(bgName);
           if (entry) {
@@ -548,6 +571,18 @@ import BreakOverlay from "../overlay/break.js";
           const y = (i % 2 === 1) ? endPoint.y : hit.y;
           hit.judgements.push(createJudge(x, y, hit.time + i * hit.sliderTime));
         }
+        hit.ticks = [];
+        const interval = hit.timing.trueMillisecondsPerBeat / self.track.difficulty.SliderTickRate;
+        if (interval > 0) {
+          for (let span = 0; span < hit.repeat; span++) {
+            for (let elapsed = interval; elapsed < hit.sliderTime - 10; elapsed += interval) {
+              const fraction = elapsed / hit.sliderTime;
+              const at = hit.curve.pointAt(span % 2 ? 1 - fraction : fraction);
+              const sprite = makeSpriteImage(hit._container, 'assets/sliderscorepoint.png', at.x, at.y, self.circleRadius * .35, 0);
+              hit.ticks.push({ time: hit.time + span * hit.sliderTime + elapsed, sprite: sprite.img, scored: false });
+            }
+          }
+        }
       };
 
       this.createSpinner = function (hit) {
@@ -605,6 +640,7 @@ import BreakOverlay from "../overlay/break.js";
         self.game.sample[defSet].slidertick.play();
       };
       this.playHitsound = function (hit, id, time) {
+        self.storyboard.trigger('HitSound', time);
         while (self.curtimingid + 1 < self.track.timingPoints.length && self.track.timingPoints[self.curtimingid + 1].offset <= time) self.curtimingid++;
         while (self.curtimingid > 0 && self.track.timingPoints[self.curtimingid].offset > time) self.curtimingid--;
         const timing = self.track.timingPoints[self.curtimingid];
@@ -631,6 +667,8 @@ import BreakOverlay from "../overlay/break.js";
       };
 
       this.hitSuccess = function (hit, points, time) {
+        if (self.game.paused || self.failed || self.ended || hit.score >= 0) return;
+        if (hit.type !== 'spinner' && points > 0) self.hitErrors.push(time - hit.time);
         self.scoreOverlay.hit(points, 300, time);
         if (points > 0) {
           if (hit.type === "spinner") self.playHitsound(hit, 0, hit.endTime);
@@ -818,6 +856,15 @@ import BreakOverlay from "../overlay/break.js";
           const dx1 = predict.x - at.x, dy1 = predict.y - at.y;
           isfollowing |= dx1 * dx1 + dy1 * dy1 <= (followPx + predict.r) * (followPx + predict.r);
           const activated = (self.game.down && isfollowing) || hit.followSize > 1.01;
+          for (const tick of hit.ticks) {
+            if (tick.scored) continue;
+            tick.sprite._setAlpha(time >= hit.time - self.approachTime && time < tick.time ? .8 : 0);
+            if (time >= tick.time) {
+              tick.scored = true;
+              self.scoreOverlay.hit(activated ? 10 : 0, 10, tick.time);
+              if (activated) self.playTicksound(hit, tick.time);
+            }
+          }
           
           if (activated && !hit.activatedOnce) hit.activatedOnce = true;
 
@@ -936,6 +983,9 @@ import BreakOverlay from "../overlay/break.js";
         
         const bgUrl = document.body?.dataset?.bgUrl;
         const effectiveFade = Math.min(Math.max(0, fade), 0.95);
+        const key = `${bgUrl || ''}:${effectiveFade}`;
+        if (self._backgroundKey === key) return;
+        self._backgroundKey = key;
         try {
           if (bgUrl) {
             document.body.style.backgroundImage = `linear-gradient(rgba(0,0,0,${effectiveFade}), rgba(0,0,0,${effectiveFade})), url('${bgUrl}')`;
@@ -953,29 +1003,33 @@ import BreakOverlay from "../overlay/break.js";
         let time;
         if (this.audioReady) time = self.osu.audio.getPosition() * 1000 + self.offset;
 
-        if (typeof time !== "undefined") {
+        if (typeof time !== "undefined" && self.started && !self.game.paused && !self.ended) {
           const nextapproachtime =
             (waitinghitid < self.hits.length &&
              self.hits[waitinghitid].time - (self.hits[waitinghitid].approachTime || self.approachTime) > time)
               ? self.hits[waitinghitid].time - (self.hits[waitinghitid].approachTime || self.approachTime)
               : -1;
-          self.breakOverlay.countdown(nextapproachtime, time);
+          if (!self.tutorial) self.breakOverlay.countdown(nextapproachtime, time);
           self.updateBackground(time);
           self.updateHitObjects(time);
+          self.storyboard.update(time);
           self.scoreOverlay.update(time);
           self.game.updatePlayerActions(time);
 
           
-          if (!self.game.paused &&
+          if (!self.noFail && !self.game.paused &&
               self.scoreOverlay &&
               typeof self.scoreOverlay.HP !== "undefined" &&
               self.scoreOverlay.HP <= 0) {
             if (self.osu?.audio?.pause) self.osu.audio.pause();
             self.game.paused = true;
+            self.failed = true;
+            if(document.pointerLockElement===host)document.exitPointerLock();
+            self.storyboard.pause();
             
             try {
               const sfx = new Audio('hitsounds/beatmapFail.mp3');
-              sfx.volume = 1.0;
+              sfx.volume = self.game.masterVolume;
               sfx.play().catch(() => {});
             } catch(_) {}
             const fm = document.getElementById("fail-menu");
@@ -992,12 +1046,11 @@ import BreakOverlay from "../overlay/break.js";
                 try { fm.setAttribute("hidden", ""); } catch (e) {}
                 try { document.getElementById("pause-menu").setAttribute("hidden", ""); } catch (e) {}
                 try { self.game.paused = false; self.osu?.audio?.pause?.(); } catch (e) {}
-                try { self.destroy(); } catch (e) {}
-                if (window.quitGame) window.quitGame();
+                self.quit();
               };
             }
           }
-        } else {
+        } else if (!self.audioReady) {
           self.updateBackground(-100000);
         }
 
@@ -1015,7 +1068,8 @@ import BreakOverlay from "../overlay/break.js";
             self.scoreOverlay.visible = false;
             
             
-            self.scoreOverlay.showSummary(self.track.metadata, null, self.retry, self.quit)
+            self.storyboard.pause();
+            self.scoreOverlay.showSummary(self.track.metadata, self.hitErrors, self.retry, self.quit)
               .catch(() => {});
           }
           
@@ -1032,6 +1086,22 @@ import BreakOverlay from "../overlay/break.js";
 
       
       this.start = function () {
+        if (self.destroyed) return;
+        const needsCapture=self.game.cursorSensitivity!==1 && !self.pointerLockDeclined && document.pointerLockElement!==host;
+        if (self.osu.audio.audio.state === 'suspended' || needsCapture) {
+          if (!host.querySelector('.game-start-prompt')) {
+            const prompt = document.createElement('button');
+            prompt.className = 'game-start-prompt';
+            const keys=[self.game.K1code||'KeyZ',self.game.K2code||'KeyX'].map(code=>code.replace(/^Key|^Digit/g,'')).join(' / ');
+            prompt.textContent = `${self.tutorial?'Click to start the tutorial':'Click to start'} · Aim with your mouse, tap ${keys}${self.game.allowMouseButton?' or click':''}`;
+            host.appendChild(prompt);
+            prompt.onclick = async () => {
+              if(needsCapture){try{if(!host.requestPointerLock)throw new Error('Mouse capture unavailable');await host.requestPointerLock();}catch{self.pointerLockDeclined=true;self.game.cursorSensitivity=1;window.osuToast?.('Mouse capture is unavailable. Normal cursor movement is active.',true);}}
+              await self.osu.audio.audio.resume();prompt.remove();self.start();
+            };
+          }
+          return;
+        }
         self.started = true;
         self.osu.audio.gain.gain.value = self.game.masterVolume;
         self.osu.audio.playbackRate = self.playbackRate;
@@ -1040,7 +1110,7 @@ import BreakOverlay from "../overlay/break.js";
         try {
           if (self.hits && self.hits.length > 0) {
             const firstHitMs = Number(self.hits[0].time) || 0;
-            if (firstHitMs > 5000) {
+            if (!self.tutorial && firstHitMs > 5000) {
               const desiredStartMs = Math.max(0, firstHitMs - 5000);
               
               
@@ -1059,19 +1129,36 @@ import BreakOverlay from "../overlay/break.js";
         self.osu.audio.play(800 + self.wait);
       };
       this.retry = function () {
+        document.dispatchEvent(new CustomEvent('osu:results-retry'));
         if (!self.game.paused) { self.osu.audio.pause(); self.game.paused = true; }
         self.destroy();
+        window.osuSettings?.applyToGame(self.game);
+        document.body.classList.remove('results-visible');
+        document.getElementById('results-overlay')?.remove();
+        window.osuShell?.close();
         self.constructor(self.game, self.osu, self.track);
-        self.loadingMenu.hide();
-        self.audioReady = true;
-        self.start();
+        self.storyboard.load().then(() => {
+          if (self.destroyed) return;
+          self.endTime = Math.max(self.endTime, self.storyboard.endTime);
+          self.scoreOverlay.totalDurationMs = self.endTime;
+          self.loadingMenu.hide();
+          self.audioReady = true;
+          self.start();
+        });
       };
       this.quit = function () {
-        try { self.game.paused = false; self.osu?.audio?.play?.(); } catch (e) {}
+        if(window.osuApp)return window.osuApp.quit();
+        try { self.osu?.audio?.pause?.(); } catch (e) {}
         try { self.destroy(); } catch (e) {}
         if (window.quitGame) window.quitGame();
       };
       this.destroy = function () {
+        self.destroyed = true;
+        if(document.pointerLockElement===host)document.exitPointerLock();
+        self.osu?.audio?.pause?.();
+        self.storyboard.destroy();
+        window.removeEventListener('blur', onBlur);
+        document.removeEventListener('pointerlockchange',onPointerLockChange);
         try { self.breakOverlay._root.remove(); } catch (e) {}
         try { self.scoreOverlay._root.remove(); } catch (e) {}
         try { self.loadingMenu._root.remove(); } catch (e) {}
@@ -1093,6 +1180,7 @@ import BreakOverlay from "../overlay/break.js";
         } catch (e) {}
         window.onresize = null;
         self.game.cleanupPlayerActions();
+        if (cursorPortal) cursorPortal.style.display = 'none';
         self.render = function () {};
       };
 
@@ -1107,7 +1195,10 @@ import BreakOverlay from "../overlay/break.js";
         ensureCursorPortal();
         updateCursorPortal(self.game, gfx);
       };
-      window.addEventListener("blur", function () { if (self.audioReady) self.pause(); });
+      const onBlur = () => { if (self.audioReady) self.pause(); };
+      const onPointerLockChange=()=>{if(!document.pointerLockElement&&self.started&&!self.game.paused&&!self.ended&&!self.failed&&!self.destroyed&&self.game.cursorSensitivity!==1)self.pause();};
+      document.addEventListener('pointerlockchange',onPointerLockChange);
+      window.addEventListener('blur', onBlur);
   }
 
 export default Playback;

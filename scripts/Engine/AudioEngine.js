@@ -27,7 +27,7 @@ export default (function () {
     );
   }
 
-  function OsuAudio(filename, buffer, callback) {
+  function OsuAudio(filename, buffer, callback, onerror) {
     var self = this;
     this.decoded = null;
     this.source = null;
@@ -54,7 +54,7 @@ export default (function () {
           }
         },
         function (err) {
-          alert("Audio decode failed. Please try a different browser or audio file.");
+          if (onerror) onerror(err || new Error('Audio decoding failed.'));
         }
       );
     }
@@ -76,6 +76,7 @@ export default (function () {
     };
 
     this.play = function play(wait = 0) {
+      if (self.playing || !self.decoded) return;
       if (self.audio.state === "suspended") {
         console.warn("Audio suspended. Waiting for touchstart.");
         self.audio.resume();
@@ -93,13 +94,14 @@ export default (function () {
           0
         );
       } else {
-        self.source.start(0, self.position);
+        if (self.position < 0) self.source.start(self.audio.currentTime - self.position / self.playbackRate, 0);
+        else self.source.start(0, Math.min(self.position, self.decoded.duration));
       }
     };
 
     
     this.pause = function pause() {
-      if (!self.playing || self._getPosition() <= 0) return false;
+      if (!self.playing) return false;
       self.position +=
         (self.audio.currentTime - self.started) * self.playbackRate;
       self.source.stop();
@@ -146,7 +148,7 @@ export default (function () {
 
     return Promise.all(urls.map(function(u){
       
-      return fetch(u).then(function(r){ return r.arrayBuffer(); })
+      return fetch(u, { signal: AbortSignal.timeout(10000) }).then(function(r){ if (!r.ok) throw new Error('Sound unavailable'); return r.arrayBuffer(); })
         .then(function(ab){ return audioContext.decodeAudioData(ab); })
         .then(function(decoded){ results[u] = makeSfx(decoded); report(u); })
         .catch(function(err){ console.warn('SFX load failed:', u, err); report(u); });

@@ -1,0 +1,9 @@
+# What did you build into Make Your Game, and what was hard about it?
+
+I built osu! Web, a browser-based recreation of osu!standard. osu! is a rhythm game where you click circles to the beat of songs you like, hold and follow sliders, and spin through spinners. Each song has community-made levels, called beatmaps, with different patterns and difficulties. I made it for Reboot01 in Bahrain using HTML, CSS and vanilla JavaScript, with no JavaScript frameworks or Canvas, and an interface inspired by osu!lazer.
+
+The game supports circles, sliders and spinners, with live scoring, accuracy, combos, hit feedback, pause, retry and results. It plays real .osz beatmaps, includes 18 starter mapsets and a tutorial, and has an in-game browser where you can search, preview songs and download more maps without an osu! account. Maps and local scores are saved in the browser. I also added customisable controls, a music player, a reactive logo visualizer, animated menus and results cards that let you compare your previous runs.
+
+The hardest part was making the timing feel right. Music, note animations, keyboard and mouse input, and scoring all have to stay aligned, including after pausing or retrying. Rendering through DOM elements and SVG added another challenge: curved sliders and busy maps needed to stay responsive without creating thousands of unnecessary elements. Importing real archives also meant handling different map data, extracting audio and artwork, and saving everything reliably.
+
+I adapted open-source parsing, mathematics and audio foundations from webosu, then built a custom DOM/SVG renderer and the surrounding interface and library experience. I originally made this about a year ago and returned to improve it for The Reboot Showroom. What I'm proud of is how much fits together: you can discover a song, install a map, play it, save a score and try to beat it, all inside one browser tab.

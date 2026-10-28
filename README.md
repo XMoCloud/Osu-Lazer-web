@@ -1,53 +1,125 @@
 # osu! Web
 
-A browser-based recreation of the popular rhythm game **osu!**, built entirely using web technologies. 
+**osu!** is a rhythm game where you click circles to the beat of songs you like. Its standard mode also includes sliders that you hold and follow, and spinners that you move around. Community-made levels, called **beatmaps**, determine the patterns and timing for each song, with different difficulties to choose from.
 
-Unlike traditional web game ports that rely on the HTML5 `<canvas>`, this project utilizes a custom **DOM and SVG-based rendering engine**. This means all game objects (hit circles, sliders, spinners) are actual DOM elements and SVG paths manipulated in real-time, providing a unique approach to rendering complex rhythm game mechanics on the web.
+This project recreates **osu!standard in the browser**, with an interface inspired by **osu!lazer**. You can play real community beatmaps, download more songs in-game, and keep track of your scores.
 
-## 🔥 UI/UX Features
+I originally built this for **Reboot01's Make Your Game project in Bahrain**. About a year later, I returned to improve it for **The Reboot Showroom**, from helping new players get started to making the menus move with the music.
 
-The user interface was completely built from scratch and heavily inspired by **osu!lazer**, featuring a clean, modern aesthetic with smooth animations and transitions.
+The game runs on **HTML, CSS and vanilla JavaScript**, with a custom **DOM/SVG renderer**. No JavaScript framework or Canvas is used.
 
-*   **Modern Intro & Main Menu:** Featuring background videos, parallax scrolling effects, and dynamic audio visualization.
-*   **Integrated Beatmap Browser:** An elegant song selection screen to browse your imported tracks.
-*   **Search & Filtering:** Quickly find your favorite maps by title, artist, or difficulty name.
-*   **Smooth Gameplay HUD:** Slick overlay elements for Score, Accuracy, Combo, and HP drain.
-*   **Results Screen:** Detailed post-game statistics highlighting your misses, hits, accuracy, and overall rating.
+![The main menu with its pink osu! logo, radial music visualizer and tutorial shortcut](docs/images/showcase/main-menu.png)
 
-## ⚙️ Core Functionalities
+**18 starter mapsets | In-game downloads | Real .osz imports | Saved local scores**
 
-*   **Native `.osz` Support:** Import original osu! beatmap files directly into the browser. The game unzips and parses them on the fly.
-*   **Persistent Storage:** Imported beatmaps, audio files, background images, and metadata are saved locally using **IndexedDB**, so you don't have to re-import them on every visit.
-*   **Full Object Support:** Precisely parses and renders standard osu! objects:
-    *   **Hit Circles**
-    *   **Sliders:** Complex slider paths are calculated and drawn in real-time using SVG paths, including support for Linear, Bezier, and Perfect Circle curve types.
-    *   **Spinners**
-*   **Local Leaderboards:** Automatically tracks and saves your high scores and ranks locally for every difficulty you play.
-*   **Web Audio API:** Ensures low-latency audio playback and tightly synchronized timing between the beatmap commands and the audio track.
-*   **Complete Game Loop:** Pause, resume, retry, break periods, and fail states are fully implemented.
+[Get started](#get-started) | [Controls](#controls) | [Under the hood](#under-the-hood) | [Credits](#credits)
 
-## 🎮 Controls
+## Get started
 
-The game replicates standard osu! controls:
-*   **Aim:** Mouse or Pen
-*   **Click:** 
-    *   Keyboard: `Z` and `X` (Default)
-    *   Mouse: Left Click and Right Click
-*   **Pause:** `Esc`
+From the project folder, start a static server:
 
-## 🛠️ Technical Implementation Highlights
+```sh
+python -m http.server 8765
+```
 
-*   **DOM/SVG Engine:** A significant departure from Canvas-based games. Slider bodies are constructed using `<path>` elements within an `<svg>` layer, ensuring crisp edges without pixelation. Hit circles map directly to DOM image manipulation.
-*   **Frame Optimization:** For maps with thousands of objects, the engine utilizes a time-window optimization algorithm, only bringing DOM elements into existence a few seconds before they appear on screen to prevent browser memory overload.
-*   **Client-side Unzipping:** A custom virtual file system parses ZIP central directories in the browser to extract `.osu`, `.mp3/.ogg`, and image files instantly.
+Open <http://localhost:8765> and click to start. There is no build step or package installation needed to play. Use a current desktop browser with Web Audio, IndexedDB, SVG and `DecompressionStream('deflate-raw')` support.
 
-## 🏆 Credits & Acknowledgements
+New to osu!? Click **Play the osu! tutorial** on the main menu. It opens **new beginnings**, the original tutorial map, with storyboard instructions and voice samples. The 18 starter mapsets download in the background, with the tutorial first; you can play installed maps while the rest arrive.
 
-A massive thanks to GitHub user **[111116](https://github.com/111116)** and their project **[webosu](https://github.com/111116/webosu)**. 
+Want to share the game? It can run on **GitHub Pages**. Follow the [hosting instructions](docs/DEPLOYMENT.md).
 
-A large portion of the core logic, beatmap parsing (`osu.js`), curve mathematics (`LinearBezier.js`, `CircumscribedCircle.js`), and audio managing (`AudioEngine.js`) was taken or adapted directly from their fantastic repository. 
+## Gameplay
 
-**Modifications made in this project from the original `webosu`:**
-*   **Complete Engine Overhaul:** The original Canvas rendering logic was entirely stripped out and rewritten to function strictly using **DOM and SVG elements**.
-*   **Custom UI:** The entire user interface, from the main menu and song select to the gameplay HUD and results screen, is a custom build inspired by osu!lazer, replacing the original simplistic menus.
-*   **Database Shift:** Integration with IndexedDB allows for robust storage of imported beatmaps and local leaderboards.
+Hit circles as their approach rings meet them, hold and follow sliders, and spin through spinners. Your timing determines the judgment for each hit, while consecutive successful hits build your combo.
+
+Score, accuracy, combo and health update as you play, with hit sounds and judgments giving immediate feedback. Pause, resume, retry, breaks and fail states are all part of the game loop. Beatmap artwork and supported background videos give each song its own atmosphere.
+
+![Gameplay showing a 431 combo, hit judgments, sliders, approach circles and live accuracy](docs/images/showcase/gameplay.png)
+
+## Beatmap browser and imports
+
+Open **Browse** to search by song or artist, preview the music, and download a map straight into your library. Artwork, mapper names, map status and difficulty indicators help you choose. Category filters and sorting let you explore further, and downloads show progress, support cancellation, and can be retried.
+
+Already have maps? **Import** reads original **.osz archives** and adds their playable osu!standard difficulties. The browser extracts the map data, audio and backgrounds for you. No osu! account or separate game installation is required.
+
+![The in-game browser showing a BABYMETAL search with artwork, previews and download buttons](docs/images/showcase/beatmap-browser.png)
+
+Installed maps are saved in **IndexedDB**, so you don't have to import them on every visit. Ordinary starter maps skip video to reduce download time; the tutorial keeps its full archive. Browse downloads request full archives. Public mirrors supply the files, with fallbacks when a provider fails.
+
+## Song selection
+
+Song selection brings together cover art, coloured difficulty rows, star ratings, BPM and map statistics. Search your library, switch difficulties, or choose **Random** when you can't decide.
+
+Arrow-key navigation keeps the selected difficulty in view, including in long mapsets. Switching songs uses short audio fades, and the music player's previous/next controls follow the map selection.
+
+![Song selection with coloured difficulties, beatmap statistics and a saved local score](docs/images/showcase/song-selection.png)
+
+## Results and local scores
+
+Finish a map to see your grade, score, accuracy, maximum combo and hit breakdown on an artwork-backed results card. The accuracy ring fills according to your performance, and earlier local plays appear alongside it, ordered by score.
+
+You can compare previous attempts, retry the map, or return to the library for another song. Scores stay in your browser between visits.
+
+![An S-grade result for Battle Against a True Hero with an accuracy ring and hit counts](docs/images/showcase/results.png)
+
+## Main menu and music
+
+The logo pulses with the music, the radial visualizer reacts to the audio, and the triangle background shifts through colours. Buttons stretch, tilt and bounce on hover, with animated transitions into song selection and gameplay.
+
+The toolbar music player offers playback, seeking and shuffle. Scrolling on the main menu opens the master volume dial, with volume remembered for gameplay too. Settings save your hit keys, mouse-button preference, cursor size and sensitivity. The notification bell collects messages and running downloads, with new notifications appearing below the toolbar.
+
+![The expanded main menu with settings, play, import, browse and exit controls around the logo](docs/images/showcase/menu-controls.png)
+
+## Controls
+
+| Action | Default control |
+| --- | --- |
+| Aim | Move the mouse or pen |
+| Hit a circle / hold a slider | `Z` or `X`, or left/right mouse button |
+| Spin | Hold a hit key or mouse button and move around the spinner |
+| Pause / resume | `Esc` |
+| Switch mapsets | Left / right arrow in song selection |
+| Switch difficulties | Up / down arrow in song selection |
+| Start the selected difficulty | `Enter` |
+| Master volume | Scroll up / down on the main menu |
+
+Open **Settings** from the gear button to change hit keys or disable mouse-button input. Custom cursor sensitivity uses Pointer Lock after a start click; `Esc` releases capture and pauses the game.
+
+## Under the hood
+
+A rhythm game makes small timing errors obvious. Music, input judgments, hit sounds and object animations need to agree on where the song is, even after a pause or retry. Gameplay timing follows the audio clock to keep those pieces aligned.
+
+Rendering through page elements also makes performance a practical challenge. The engine keeps a moving window of active hit objects, rather than creating every object in a map at once. Sliders use SVG paths, including linear, Bezier and perfect-circle curves.
+
+| Part | How it works |
+| --- | --- |
+| Gameplay rendering | DOM elements and SVG for circles, sliders, spinners and feedback |
+| Audio | Native Web Audio for playback, gain fades, hit sounds and spectrum analysis |
+| Beatmap imports | Client-side ZIP extraction and parsing of `.osu` data, music and artwork |
+| Local library | IndexedDB stores maps, metadata and scores |
+| Menu visualizer | An SVG path reused across five radial passes, driven by an audio analyser |
+| Navigation | Menu, loading, gameplay and results share `index.html`; the engine loads on demand |
+
+The project supports **osu!standard**. Gameplay video depends on the archive and browser codec support; the tutorial's storyboard and voice samples are supported, while arbitrary third-party storyboards have partial support. Maps and scores are stored per browser and site origin.
+
+For implementation details and verification:
+
+- [Testing and browser compatibility](docs/TESTING.md)
+- [Design and animation references](docs/DESIGN_REFERENCES.md)
+- [GitHub Pages deployment](docs/DEPLOYMENT.md)
+- [Third-party notices and licences](docs/THIRD_PARTY_NOTICES.md)
+
+The dependency-free regression suite runs with:
+
+```sh
+node --test tests/regressions.mjs
+```
+
+## Credits
+
+This is an independent fan recreation inspired by **osu!** and **osu!lazer**.
+
+Thanks to **[111116](https://github.com/111116)** and **[webosu](https://github.com/111116/webosu)**. A few parts of the parsing, curve mathematics and audio foundations was taken or adapted from that project.
+
+
+Beatmaps, music, artwork and fonts belong to their respective creators. The screenshots above are captures of this project.

@@ -32,6 +32,7 @@
         const cdSize       = readU32(view, 12);
         const cdOffset     = readU32(view, 16);
         const commentLen   = readU16(view, 20);
+        if (i + 22 + commentLen !== bytes.length) continue;
         return { totalEntries, cdSize, cdOffset, eocdOffset: i, commentLen };
       }
     }
@@ -120,32 +121,31 @@
     }
     File.prototype.getFullname = function(){ return this.parent ? (this.parent.getFullname() + this.name) : this.name; };
     File.prototype.getBlob = function(mime, cb){
+      const onerror = arguments[2];
       const mimeType = mime || 'application/octet-stream';
       const dataStart = this._dataOffset;
       const dataEnd = dataStart + this._compSize;
       const slice = new Uint8Array(this._buffer, dataStart, this._compSize).slice().buffer; 
-      const done = (blob)=>{ try { cb && cb(blob); } catch(_){} };
+      const done = blob => cb && cb(blob);
+      const fail = error => { if (onerror) onerror(error); else { console.error('ZIP extraction failed:', this.name, error); done(null); } };
       if (this._method === 0) {
         done(new Blob([slice], { type: mimeType }));
       } else if (this._method === 8) {
         inflateRaw(slice).then(ab => done(new Blob([ab], { type: mimeType }))).catch(err => {
-          console.error('Deflate decode failed for', this.name, err);
-          alert('This browser cannot decode compressed entries in ZIP (needs DecompressionStream). Please try a modern Chromium/Firefox.');
-          done(null);
+          fail(new Error('Could not decompress ' + this.name + '. Please use a current browser.'));
         });
       } else {
-        console.warn('Unsupported compression method', this._method, 'for', this.name);
-        done(null);
+        fail(new Error('Unsupported ZIP compression method for ' + this.name));
       }
     };
-    File.prototype.getText = function(cb){
+    File.prototype.getText = function(cb, onerror){
       this.getBlob('text/plain', async (blob)=>{
         if (!blob) { cb && cb(''); return; }
         try {
           const text = await blob.text();
           cb && cb(text);
-        } catch (e){ console.warn('text() failed', e); cb && cb(''); }
-      });
+        } catch (e){ if (onerror) onerror(e); else { console.warn('text() failed', e); cb && cb(''); } }
+      }, onerror);
     };
 
     const root = new Dir('', null);
@@ -179,6 +179,9 @@
   async function importArrayBuffer(buf){
     const eocd = findEOCD(buf);
     const list = parseCentralDirectory(buf, eocd.cdOffset, eocd.totalEntries);
+    if (list.length > 15000 || list.reduce((total, entry) => total + entry.uncomp, 0) > 700 * 1024 * 1024) {
+      throw new Error('This beatmap archive is too large to expand safely in the browser.');
+    }
     const root = buildFs(buf, list);
     return root;
   }

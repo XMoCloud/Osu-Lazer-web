@@ -1,0 +1,54 @@
+.results-overlay-root { position:fixed; inset:56px 0 0; z-index:10010; display:flex; flex-direction:column; align-items:stretch; justify-content:stretch; isolation:isolate; color:white; font-family:Quicksand,sans-serif; animation:resultsAppear .4s ease both; }
+.resultsBackdrop { position:absolute; inset:-20px; z-index:-1; background:#30253f center/cover; filter:blur(12px) brightness(.5); pointer-events:none; }
+.results-visible #topBar { z-index:20000; opacity:1; transform:none; pointer-events:auto; visibility:visible; }
+.results-visible #cursorPortal { display:none !important; }
+.resultsRail { position:relative; flex:1; min-height:0; display:flex; align-items:center; gap:8px; padding-top:70px; padding-bottom:24px; overflow-x:auto; overflow-y:hidden; overscroll-behavior:contain; scrollbar-width:none; }
+.resultsRail::-webkit-scrollbar { display:none; }
+.resultCardSlot { position:relative; flex:none; }
+.resultScoreCard { position:absolute; inset:0 auto auto 0; width:172px; height:550px; border-radius:27px; background:#333534f5; text-align:center; transform:scale(var(--result-scale,1)); transform-origin:top left; }
+.resultScoreCard.expanded { width:480px; height:760px; }
+.resultCardHeader { position:relative; height:64px; }
+.resultPosition { position:absolute; top:15px; left:24px; color:#d1cbd2; font-size:14px; font-weight:800; }
+.resultAvatar { position:absolute; top:-64px; left:calc(50% - 52px); width:104px; height:104px; object-fit:cover; border-radius:24px; }
+.resultPlayerName { position:absolute; top:42px; left:0; right:0; font-weight:700; font-size:16px; }
+.resultCardBody { position:relative; border-radius:27px; background:center/cover; height:696px; padding:16px 14px; overflow:visible; }
+.resultCardMeta { height:46px; }.resultCardMeta h1 { margin:0 0 4px; font-size:22px; line-height:1.2; font-weight:700; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }.resultCardMeta p { margin:0; font-size:15px; }
+.resultRankDial { position:relative; width:330px; height:330px; margin:0 auto; }
+.accuracyDial { display:block; width:100%; height:100%; overflow:visible; }
+.resultGrade { --grade-colour:#22d9e2; position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:51%; height:32%; object-fit:contain; filter:drop-shadow(0 0 1px var(--grade-colour)) drop-shadow(0 0 3px var(--grade-colour)); }
+.resultGrade.grade-SS { --grade-colour:#f55bcb; width:59%; }.resultGrade.grade-A { --grade-colour:#b3e63d; }.resultGrade.grade-B { --grade-colour:#ffcf54; }.resultGrade.grade-C { --grade-colour:#ff9565; }.resultGrade.grade-D,.resultGrade.grade-F { --grade-colour:#ff6080; }
+.resultThreshold { position:absolute; width:30px; height:15px; transform:translate(-50%,-50%); object-fit:contain; }
+.resultScore { height:70px; font-weight:300; font-size:61px; line-height:70px; font-variant-numeric:tabular-nums; letter-spacing:1px; margin:0; }
+.resultDifficultyBadge { display:table; margin:0 auto 8px; height:22px; line-height:22px; padding:0 10px; border-radius:13px; background:var(--difficulty,#ffcf5f); color:#28242b; font-weight:800; font-size:13px; }
+.resultDifficultyName { font-size:17px; line-height:22px; height:22px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.resultMapper { font-size:12px; height:18px; margin:0 0 14px; line-height:18px; }
+.resultStats { display:grid; grid-template-columns:1fr 1fr; gap:4px; height:48px; margin:0 0 8px; }
+.resultStat { min-width:0; display:flex; flex-direction:column; gap:6px; }
+.resultStatLabel { background:#171c1bc9; border-radius:10px; font-size:11px; font-weight:700; line-height:15px; }
+.resultStatValue { font-size:20px; font-weight:500; line-height:24px; }
+.resultJudges { display:grid; grid-template-columns:repeat(4,1fr); gap:3px; height:48px; }
+.judge-great .resultStatLabel { color:#5ad5ff; }.judge-good .resultStatLabel { color:#a9ef41; }.judge-meh .resultStatLabel { color:#ffd836; }.judge-miss .resultStatLabel { color:#ff386b; }
+.resultPlayedOn { position:absolute; bottom:13px; left:10px; right:10px; font-size:10px; line-height:14px; margin:0; }.resultFullCombo { position:absolute; bottom:33px; left:0; right:0; color:#bbf2a0; font-size:10px; font-weight:800; margin:0; }
+.expanded .resultCompactFooter { display:none; }
+.compact .resultCardHeader { height:40px; }
+.compact .resultPosition { left:0; right:0; top:10px; font-size:17px; color:white; }
+.compact .resultAvatar { top:54px; left:12px; width:148px; height:148px; z-index:2; }
+.compact .resultPlayerName { top:211px; font-size:14px; z-index:2; }
+.compact .resultCardBody { height:440px; padding:0 14px; }
+.compact .resultCardMeta,.compact .resultRankDial,.compact .resultScore,.compact .resultDifficultyBadge,.compact .resultDifficultyName,.compact .resultMapper,.compact .resultPlayedOn,.compact .resultFullCombo { display:none; }
+.compact .resultStats { position:absolute; left:14px; right:14px; top:335px; height:auto; display:flex; flex-direction:column; gap:10px; margin:0; }
+.compact .resultJudges { position:absolute; top:210px; left:14px; right:14px; display:flex; flex-direction:column; gap:9px; height:auto; }
+.compact .resultStat { flex-direction:row; align-items:center; justify-content:space-between; gap:3px; }
+.compact .resultStatLabel { background:transparent; font-size:11px; text-align:left; color:#fff; }
+.compact .resultStatValue { font-size:12px; line-height:15px; font-weight:700; color:#ffdc3a; }
+.resultCompactFooter { height:70px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; font-size:22px; }
+.rankBadge { width:36px; height:18px; padding:0; object-fit:contain; }
+.inspectScore { position:absolute; inset:0; width:100%; height:100%; border:0; border-radius:27px; background:transparent; color:transparent; font-size:0; cursor:pointer; }
+.expanded .inspectScore { pointer-events:none; }.inspectScore:focus-visible { outline:3px solid #b6eafa; outline-offset:2px; }
+.resultsFooter { flex:none; height:67px; display:flex; align-items:center; gap:20px; background:#303033; padding:8px 25px 8px 165px; }
+.resultsFooter button { font:500 15px Quicksand,sans-serif; color:white; cursor:pointer; }
+.resultsBack { position:absolute; left:0; bottom:0; height:67px; width:135px; background:#eb409e; border:0; display:flex; justify-content:center; align-items:center; gap:18px; transform:skewX(-8deg); }
+.resultsBack svg { width:27px; height:27px; fill:none; stroke:white; stroke-width:2.5; }.resultsRetry { border:0; border-radius:12px; background:#232325; padding:12px 35px; margin:auto; }.resultsRetry:hover { background:#4b3c5d; }.resultsOrder { color:#c0b8c3; font-size:12px; }
+@keyframes resultsAppear { from{opacity:0} to{opacity:1} }
+@media(max-width:600px) { .resultsOrder { display:none; }.resultsFooter { padding-left:145px; padding-right:12px; }.resultsRetry { padding:12px 18px; font-size:12px !important; } }
+@media(prefers-reduced-motion:reduce) { .results-overlay-root { animation:none; } }

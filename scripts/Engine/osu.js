@@ -10,7 +10,7 @@ export default (function() {
 
     function parseKeyValue(line) {
         const colonIdx = line.indexOf(":");
-        const key = line.substring(0, colonIdx);
+        const key = line.substring(0, colonIdx).trim();
         const value = line.substring(colonIdx + 1).trim();
         return { key, value: isNaN(value) ? value : +value };
     }
@@ -64,7 +64,7 @@ export default (function() {
                         break;
                     }
                     case "[Events]":
-                        this.events.push(line.split(","));
+                        this.events.push((line.match(/"[^"]*"|[^,]+|(?<=,)(?=,)/g) || []).map(value => value.trim()));
                         break;
                     case "[Difficulty]": {
                         const { key, value } = parseKeyValue(line);
@@ -154,15 +154,16 @@ export default (function() {
                 }
             }
 
-            this.general.PreviewTime = Math.min(this.general.PreviewTime / 10, this.hitObjects[0]?.time || 0);
-            
-            if (this.difficulty.OverallDifficulty) {
-                this.difficulty.HPDrainRate = this.difficulty.HPDrainRate || this.difficulty.OverallDifficulty;
-                this.difficulty.CircleSize = this.difficulty.CircleSize || this.difficulty.OverallDifficulty;
-                this.difficulty.ApproachRate = this.difficulty.ApproachRate || this.difficulty.OverallDifficulty;
-            } else {
-                console.warn("[preproc] Overall Difficulty undefined");
-            }
+            this.general.PreviewTime = Math.max(0, this.general.PreviewTime || 0);
+            this.general.StackLeniency ??= 0.7;
+            this.difficulty.OverallDifficulty ??= 5;
+            this.difficulty.HPDrainRate ??= this.difficulty.OverallDifficulty;
+            this.difficulty.CircleSize ??= 4;
+            this.difficulty.ApproachRate ??= this.difficulty.OverallDifficulty;
+            this.difficulty.SliderMultiplier ??= 1.4;
+            this.difficulty.SliderTickRate ??= 1;
+            if (!this.hitObjects.length) throw new Error('This difficulty has no playable objects.');
+            if (!this.timingPoints.length) throw new Error('This difficulty has no timing information.');
 
             let last = this.timingPoints[0];
             for (let i = 0; i < this.timingPoints.length; i++) {
@@ -220,17 +221,26 @@ export default (function() {
         };
 
         this.load = () => {
-            this.raw_tracks = this.zip.children.filter(c => c.name.endsWith(".osu"));
+            const collect = dir => dir.children.flatMap(c => c.directory ? collect(c) : [c]);
+            this.raw_tracks = collect(this.zip).filter(c => /\.osu$/i.test(c.name));
 
             if (!this.raw_tracks?.length) {
                 this.onerror?.("No .osu files found!");
             } else {
                 this.raw_tracks.forEach(t => {
                     t.getText(text => {
-                        const track = new Track(this.zip, text);
-                        this.tracks.push(track);
-                        track.ondecoded = this.track_decoded;
-                        track.decode();
+                        try {
+                            // Other rulesets can share an archive with standard difficulties.
+                            const mode = text.match(/^Mode\s*:\s*(\d+)/m);
+                            if (!mode || Number(mode[1]) === 0) {
+                                const track = new Track(this.zip, text);
+                                track.decode();
+                                this.tracks.push(track);
+                            }
+                            this.track_decoded();
+                        } catch (error) {
+                            this.onerror?.(error.message || 'Could not parse this beatmap.');
+                        }
                     });
                 });
             }
@@ -245,13 +255,15 @@ export default (function() {
 
         this.load_mp3 = (track) => {
             track = track || this.tracks[0];
-            const mp3_raw = this.zip.children.find(c => c.name.toLowerCase() === track.general.AudioFilename.toLowerCase());
+            const mp3_raw = this.zip.getChildByName(String(track.general.AudioFilename || ''));
+            if (!mp3_raw) { this.onerror?.('The beatmap audio file is missing.'); return; }
             mp3_raw.getBlob("audio/mpeg", blob => {
+                if (!blob) { this.onerror?.('The beatmap audio could not be extracted.'); return; }
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     this.audio = new AudioEngine(mp3_raw.name.toLowerCase(), e.target.result, () => {
                         if (this.onready) this.onready();
-                    });
+                    }, error => this.onerror?.(error.message || 'Audio decoding failed.'));
                 };
                 reader.readAsArrayBuffer(blob);
             });

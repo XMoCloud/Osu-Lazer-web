@@ -1,0 +1,84 @@
+/* Shared native-style toolbar and overlays; all drawing is CSS/DOM/SVG. */
+[hidden] { display:none !important; }
+.shellToolbar { position:fixed; inset:0 0 auto; height:56px; z-index:20000; padding:0 20px; display:none; align-items:center; justify-content:space-between; background:#181818; color:white; }
+.results-visible .shellToolbar { display:flex; }
+.shellToolbar .left,.shellToolbar .right { display:flex; align-items:center; gap:16px; }
+.shellToolbar .left { gap:8px; }
+.shellToolbar img { width:34px; height:34px; border-radius:5px; }
+.toolbarButton { position:relative; display:grid; place-items:center; width:48px; height:48px; padding:10px; color:white; border:0; border-radius:7px; background:transparent; cursor:pointer; }
+.toolbarButton svg,.sidePanel svg,.notificationCard svg,.menuSettings svg { width:100%; height:100%; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+.toolbarButton:hover { background:#ffffff12; }
+#toolbarSettings[aria-expanded=true],#notificationToggle[aria-expanded=true] { background:#cf1852; }
+#topBar #toolbarSettings[aria-expanded=true],#topBar #notificationToggle[aria-expanded=true] { background:#cf1852; }
+#notificationToggle[data-count]:not([data-count=""])::after { content:attr(data-count); position:absolute; right:0; top:1px; min-width:17px; padding:1px 4px; border-radius:12px; background:#f36; font:700 11px Quicksand,sans-serif; }
+#topBar .left { gap:8px; }
+#topBar .right { gap:14px; }
+#shellScrim { position:fixed; inset:56px 0 0; z-index:18000; background:#0009; opacity:0; transition:opacity .35s; }
+#shellScrim.open { opacity:1; }
+.sidePanel { position:fixed; top:56px; bottom:0; z-index:19000; color:#fff; background:#302e3b; font-family:Quicksand,sans-serif; transition:transform .45s cubic-bezier(.22,1,.36,1); box-shadow:0 5px 20px #0005; }
+.sidePanel button,.sidePanel input { font:inherit; }
+.sidePanel button { cursor:pointer; color:inherit; }
+.sidePanel button:focus-visible,.sidePanel input:focus-visible { outline:2px solid #b69aff; outline-offset:2px; }
+.sidePanel h1,.sidePanel h2,.sidePanel h3,.sidePanel p { margin:0; }
+.sidePanel .panelClose { position:absolute; right:12px; top:12px; width:30px; height:30px; padding:7px; border:0; border-radius:5px; background:#ffffff09; color:#c2bbd2; }
+.sidePanel .panelClose:hover { background:#ffffff20; color:white; }
+.settingsPanel { left:0; width:min(802px,96vw); display:grid; grid-template-columns:239px minmax(0,1fr); transform:translateX(-105%); }
+.sidePanel.open { transform:translateX(0); }
+.settingsNav { background:#24222c; padding-top:12px; }
+.settingsNav button { width:100%; display:flex; gap:14px; align-items:center; text-align:left; position:relative; border:0; padding:18px 24px 18px 40px; background:transparent; color:#aca0ca; font-size:17px; }
+.settingsNav svg { width:26px; height:26px; flex:none; }
+.settingsNav button.active { color:white; }
+.settingsNav button.active::before { content:''; position:absolute; left:20px; top:20px; bottom:20px; width:5px; border-radius:4px; background:#9164ff; }
+.settingsBody { display:flex; flex-direction:column; min-height:0; }
+.settingsHeader { position:relative; padding:32px 32px 16px 18px; border-bottom:3px solid #191820; }
+.settingsHeader h1 { font-size:46px; font-weight:400; line-height:1.1; }
+.settingsHeader p { margin:4px 0 28px; font-size:20px; color:#d8d1e6; }
+#settingsSearch { display:block; border:0; border-radius:6px; background:#24222c; width:100%; padding:10px 12px; color:white; font-size:20px; }
+#settingsSearch::placeholder { color:#a59ab8; }
+.settingsScroll { padding:30px 32px 40px 18px; overflow:auto; scrollbar-width:thin; scrollbar-color:#a395c4 transparent; scroll-behavior:smooth; }
+.settingsSection { scroll-margin:20px; margin-bottom:30px; }
+.settingsSection h2 { font-size:31px; font-weight:400; margin:0 6px 26px; }
+.settingsSection h3 { font-size:22px; font-weight:500; margin:22px 6px 18px; }
+.settingRow,.rangeSetting { border-radius:7px; background:#2a2834; padding:14px; margin:5px 0; font-size:15px; }
+.settingRow { min-height:58px; display:flex; align-items:center; justify-content:space-between; gap:20px; }
+.keyBinding { min-width:75px; max-width:180px; padding:7px 12px; border:2px solid #8760d5; border-radius:7px; background:#3c3159; font-weight:700 !important; }
+.keyBinding.listening { background:#7045bd; border-color:#c7a5ff; }
+#bindingHint { font-size:13px; color:#bcb0d1; padding:6px 10px; min-height:42px; }
+.toggleSwitch { appearance:none; width:48px; height:22px; border:3px solid #7751ba; border-radius:20px; position:relative; flex:none; cursor:pointer; margin:0; }
+.toggleSwitch::before { content:''; position:absolute; width:12px; height:12px; border-radius:50%; left:2px; top:2px; background:#a48bce; transition:transform .2s; }
+.toggleSwitch:checked { background:#7751ba; }
+.toggleSwitch:checked::before { background:white; transform:translateX(25px); }
+.rangeSetting label { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.rangeSetting output { color:#d4b9ff; font-weight:700; }
+.rangeSetting input { width:100%; margin:23px 0 10px; accent-color:#a177ef; cursor:pointer; }
+.rangeSetting p { color:#b7accb; font-size:12px; line-height:1.5; }
+.cursorPreview { height:75px; display:grid; place-items:center; overflow:hidden; }
+.cursorPreview img { max-width:none; height:auto; }
+#resetInputSettings { width:100%; padding:12px; border:0; border-radius:6px; background:#60429b; }
+.notificationsPanel { right:0; width:min(450px,96vw); padding:0 28px 30px; overflow-y:auto; scrollbar-width:thin; scrollbar-color:#b3a9c5 transparent; transform:translateX(105%); }
+.notificationsPanel .panelClose { display:none; }
+.notificationHeading { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:18px 0; }
+.notificationHeading h2 { font-size:16px; font-weight:800; }
+.notificationHeading h2 span { color:#ffcf20; padding-left:4px; }
+.notificationHeading button { border:0; padding:0; font-size:14px; background:transparent; font-weight:400; }
+.notificationHeading button:disabled { opacity:.35; cursor:default; }
+.notificationCard { position:relative; display:grid; grid-template-columns:46px minmax(0,1fr) 28px; min-height:75px; margin:5px 0; border-radius:6px; background:#3c394a; color:white; box-shadow:0 2px 3px #0001; }
+.notificationCard.unread::before { content:''; position:absolute; left:-11px; top:calc(50% - 9px); height:18px; width:5px; border-radius:4px; background:#b5dc26; box-shadow:0 0 9px #a7d62599; }
+.notificationIcon { display:grid; place-items:center; background:#25232f; border-radius:6px 0 0 6px; color:#bedb50; }
+.notificationIcon svg { width:22px; height:22px; stroke-width:2.8; }
+.notificationCard.error .notificationIcon { color:#ffcf35; }
+.notificationContent { padding:14px 10px; align-self:center; min-width:0; }
+.notificationContent p { font-size:14px; line-height:1.45; overflow-wrap:anywhere; margin:0; }
+.notificationContent progress { display:block; width:100%; height:5px; margin-top:12px; accent-color:#a8d346; }
+.notificationDismiss { align-self:stretch; border:0; padding:8px; color:#a49caf; background:transparent; cursor:pointer; }
+.notificationDismiss svg { width:13px; height:13px; }
+.notificationDismiss:hover { background:#ffffff12; color:white; }
+#notificationToasts { position:fixed; z-index:21000; width:min(426px,calc(100vw - 30px)); right:20px; top:72px; pointer-events:none; }
+#notificationToasts .notificationCard { pointer-events:auto; animation:notificationIn .5s cubic-bezier(.22,1,.36,1); box-shadow:0 4px 25px #0004; transition:transform .4s,opacity .4s; }
+#notificationToasts .leaving { transform:translateX(110%); opacity:0; }
+.shell-open #notificationToasts { display:none; }
+@keyframes notificationIn { from { transform:translateX(110%); opacity:0; } to { transform:translateX(0); opacity:1; } }
+#starterStatus.starterTask { position:static; inset:auto; transform:none; width:100%; max-width:none; display:grid; margin:18px 0 0; background:#24222c; box-shadow:none; padding:14px; font-size:13px; }
+@media(max-width:850px) { .settingsPanel { grid-template-columns:150px minmax(0,1fr); } .settingsNav button { padding-left:23px; font-size:14px; gap:8px; } .settingsNav button.active::before { left:10px; } }
+@media(max-width:600px) { .settingsPanel { grid-template-columns:62px minmax(0,1fr); width:100%; } .settingsNav button { padding:20px 18px; } .settingsNav button span { display:none; } .settingsNav button.active::before { left:4px; } .settingsHeader { padding:28px 18px 16px; } .settingsHeader h1 { font-size:35px; } .settingsHeader p { font-size:15px; margin-bottom:20px; } .settingsScroll { padding:24px 18px; } .settingsSection h2 { font-size:26px; } .settingRow { padding:12px 10px; font-size:13px; gap:10px; } .keyBinding { min-width:60px; } .notificationsPanel { width:100%; padding:0 20px 28px; } .notificationsPanel .panelClose { display:block; top:auto; bottom:12px; z-index:2; background:#494157; } #topBar .right { gap:6px; } .shellToolbar { padding:0 10px; } .resultPlayer { display:none; } }
+@media(prefers-reduced-motion:reduce) { .sidePanel,#shellScrim,#notificationToasts .notificationCard { animation:none; transition:none; } }

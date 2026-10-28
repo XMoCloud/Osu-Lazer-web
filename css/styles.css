@@ -13,14 +13,6 @@
   font-display: swap;
 }
 
-/* Webfont: Fontspring Torus Pro (demo) */
-@font-face {
-  font-family: 'Fontspring';
-  src: url('../fonts/Fontspring-DEMO-toruspro-light.otf') format('opentype');
-  font-weight: 300 500;
-  font-display: swap;
-}
-
 html, body {
   height: 100%;
 }
@@ -491,6 +483,10 @@ body.view-beatmaps #logo-stable-sibling {
 /* Gameplay overlay */
 body.gaming {
   overflow: hidden;
+}
+
+/* Results retain the game session, but use the native pointer for navigation. */
+body.gaming:not(.results-visible) {
   cursor: none;
 }
 

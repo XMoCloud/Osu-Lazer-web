@@ -41,6 +41,7 @@
           resolve(true);
         };
         tx.onerror = (event) => { reject(event.target.error); };
+        tx.onabort = () => reject(tx.error || new Error('Beatmap storage was interrupted. Your browser may be out of space.'));
         const store = tx.objectStore(STORE_NAME);
         store.put(map);
       });
