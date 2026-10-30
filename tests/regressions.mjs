@@ -129,6 +129,88 @@ test('tutorial/full downloads and CORS-enabled preview URLs retain the set ID',a
   assert.equal(set.preview_fallback,'https://b.ppy.sh/preview/1011011.mp3');
 });
 
+function starterFixture() {
+  const elements=new Map(),events=[],messages=[],installed=new Map(),calls=[];
+  const element=id=>{
+    if(!elements.has(id))elements.set(id,{hidden:true,textContent:'',value:0,dataset:{},setAttribute(){},classList:{contains:()=>false},querySelector:()=>({textContent:''})});
+    return elements.get(id);
+  };
+  const context={window:{osuLibrary:{ready:Promise.resolve(),maps:installed},osuToast:(message,error)=>messages.push({message,error})},
+    document:{getElementById:element,addEventListener(){},dispatchEvent:event=>events.push(event.detail)},
+    navigator:{onLine:true},CustomEvent:class{constructor(type,init){this.type=type;this.detail=init.detail;}},setTimeout(){},clearTimeout(){}};
+  vm.runInNewContext(fs.readFileSync(new URL('../scripts/loaders/starterMaps.js',import.meta.url),'utf8'),context);
+  context.window.osuDownloads={install:async(id,options)=>{
+    calls.push({id,...options});options.onProgress({state:'downloading',fraction:.5});options.onProgress({state:'importing'});installed.set(id,{});
+  }};
+  return {context,elements,events,messages,installed,calls,starters:context.window.osuStarterMaps};
+}
+
+test('starter progress covers download and import, completing only after all missing maps install',async()=>{
+  const f=starterFixture();
+  for(const [id]of f.starters.maps.slice(0,-2))f.installed.set(id,{});
+  await f.starters.retry();
+  assert.equal(f.starters.maps.length,31);
+  assert.equal(new Set(f.starters.maps.map(([id])=>id)).size,31);
+  assert.equal(f.calls.length,2,'already installed maps are skipped');
+  assert.ok(f.calls.every(call=>call.includeVideo===false));
+  assert.match(f.events[0].message,/29\/31 downloaded/);
+  assert.ok(f.events.some(event=>event.active&&event.fraction>29/31&&event.fraction<30/31));
+  assert.ok(f.events.some(event=>event.state==='importing'));
+  assert.equal(f.events.at(-1).active,false);assert.equal(f.events.at(-1).fraction,1);
+  assert.match(f.messages.at(-1).message,/All 31 default beatmaps are downloaded/);
+  const eventCount=f.events.length,messageCount=f.messages.length;
+  await f.starters.retry();
+  assert.equal(f.events.length,eventCount);assert.equal(f.messages.length,messageCount,'returning to a fully installed library stays quiet');
+});
+
+test('failed starter downloads keep retry available and never announce pack completion',async()=>{
+  const f=starterFixture();
+  for(const [id]of f.starters.maps.slice(0,-2))f.installed.set(id,{});
+  f.context.window.osuDownloads.install=async()=>{throw new Error('Offline mirror');};
+  await f.starters.retry();
+  assert.equal(f.events.at(-1).active,false);assert.equal(f.events.at(-1).fraction,29/31);
+  assert.equal(f.elements.get('starterRetry').hidden,false);
+  assert.equal(f.messages.at(-1).error,true);
+  assert.ok(f.messages.every(note=>!note.message.startsWith('All 31')));
+});
+
+test('two failing old starters do not prevent the newly added maps from being attempted',async()=>{
+  const f=starterFixture(),install=f.context.window.osuDownloads.install;
+  let failures=0;
+  f.context.window.osuDownloads.install=async(id,options)=>{
+    if(failures<2){failures++;throw new Error('Missing old archive');}
+    return install(id,options);
+  };
+  await f.starters.retry();
+  assert.equal(f.installed.size,29);
+  assert.ok(f.calls.some(call=>call.id==='1207609'));
+  assert.ok(f.calls.some(call=>call.id==='1079970'));
+  assert.equal(f.elements.get('starterText').textContent,'29/31 downloaded');
+  assert.equal(f.elements.get('starterStatus').dataset.state,'error');
+  assert.equal(f.elements.get('starterRetry').hidden,false);
+  f.context.window.osuDownloads.install=install;
+  await f.starters.retry();
+  assert.equal(f.installed.size,31);
+  assert.equal(f.calls.length,31,'retry installs only the two missing maps');
+});
+
+test('pausing the starter popup stops the pack and allows missing-only resume',async()=>{
+  const f=starterFixture();
+  f.context.window.osuDownloads.cancel=()=>{};
+  const install=f.context.window.osuDownloads.install;
+  f.context.window.osuDownloads.install=async(id,options)=>{
+    await install(id,options);f.elements.get('starterDismiss').onclick();
+  };
+  await f.starters.retry();
+  assert.equal(f.calls.length,1);assert.equal(f.calls[0].includeVideo,true,'tutorial retains its full archive');
+  assert.match(f.messages.at(-1).message,/paused/);
+  assert.equal(f.events.at(-1).active,false);
+  f.context.window.osuDownloads.install=install;
+  await f.starters.retry();
+  assert.equal(f.installed.size,31);assert.equal(f.calls.length,31);
+  assert.match(f.messages.at(-1).message,/All 31/);
+});
+
 test('logo beat phase stays aligned to the audio clock and tempo changes', () => {
   const node=()=>({setAttribute(){},append(){}});
   const context={window:{},document:{getElementById:node,createElementNS:node,addEventListener(){}},matchMedia:()=>({matches:false}),Float32Array};

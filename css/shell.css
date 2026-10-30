@@ -73,12 +73,21 @@
 .notificationDismiss { align-self:stretch; border:0; padding:8px; color:#a49caf; background:transparent; cursor:pointer; }
 .notificationDismiss svg { width:13px; height:13px; }
 .notificationDismiss:hover { background:#ffffff12; color:white; }
-#notificationToasts { position:fixed; z-index:21000; width:min(426px,calc(100vw - 30px)); right:20px; top:72px; pointer-events:none; }
+#notificationStack { position:fixed; z-index:21000; width:min(426px,calc(100vw - 40px)); right:20px; top:72px; display:flex; flex-direction:column; gap:6px; pointer-events:none; }
+#notificationToasts { width:100%; pointer-events:none; }
 #notificationToasts .notificationCard { pointer-events:auto; animation:notificationIn .5s cubic-bezier(.22,1,.36,1); box-shadow:0 4px 25px #0004; transition:transform .4s,opacity .4s; }
 #notificationToasts .leaving { transform:translateX(110%); opacity:0; }
 .shell-open #notificationToasts { display:none; }
 @keyframes notificationIn { from { transform:translateX(110%); opacity:0; } to { transform:translateX(0); opacity:1; } }
-#starterStatus.starterTask { position:static; inset:auto; transform:none; width:100%; max-width:none; display:grid; margin:18px 0 0; background:#24222c; box-shadow:none; padding:14px; font-size:13px; }
+#starterStatus { position:static; inset:auto; align-self:flex-end; pointer-events:auto; width:min(390px,100%); max-width:none; margin:0; padding:0; gap:0; grid-template-columns:46px minmax(0,1fr) 30px; background:#3c394a; border-radius:6px; box-shadow:0 5px 24px #0005; font:500 13px Quicksand,sans-serif; }
+#starterStatus .notificationContent { display:grid; gap:6px; padding:14px 10px; }
+#starterStatus strong { color:#ff94c9; font-size:14px; }
+#starterText { font-size:18px; font-weight:700; }
+#starterDetail { font-size:12px; color:#d0cad9; line-height:1.4; overflow-wrap:anywhere; }
+#starterStatus progress { margin:2px 0 0; height:5px; }
+#starterStatus #starterDismiss { position:static; padding:4px; font-size:20px; border-radius:0 6px 6px 0; }
+#starterStatus #starterRetry { justify-self:start; padding:6px 10px; background:#6242a6; font:inherit; cursor:pointer; }
+#starterStatus[data-state=complete] .notificationIcon { color:#aaff91; }
 @media(max-width:850px) { .settingsPanel { grid-template-columns:150px minmax(0,1fr); } .settingsNav button { padding-left:23px; font-size:14px; gap:8px; } .settingsNav button.active::before { left:10px; } }
 @media(max-width:600px) { .settingsPanel { grid-template-columns:62px minmax(0,1fr); width:100%; } .settingsNav button { padding:20px 18px; } .settingsNav button span { display:none; } .settingsNav button.active::before { left:4px; } .settingsHeader { padding:28px 18px 16px; } .settingsHeader h1 { font-size:35px; } .settingsHeader p { font-size:15px; margin-bottom:20px; } .settingsScroll { padding:24px 18px; } .settingsSection h2 { font-size:26px; } .settingRow { padding:12px 10px; font-size:13px; gap:10px; } .keyBinding { min-width:60px; } .notificationsPanel { width:100%; padding:0 20px 28px; } .notificationsPanel .panelClose { display:block; top:auto; bottom:12px; z-index:2; background:#494157; } #topBar .right { gap:6px; } .shellToolbar { padding:0 10px; } .resultPlayer { display:none; } }
 @media(prefers-reduced-motion:reduce) { .sidePanel,#shellScrim,#notificationToasts .notificationCard { animation:none; transition:none; } }

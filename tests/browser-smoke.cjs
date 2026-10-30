@@ -20,11 +20,14 @@ const set = id => ({ id: Number(id), title: id === '42' ? 'Browser download fixt
     const context = await browser.newContext({viewport:{width:1920,height:1080}});
     const page = await context.newPage();
     const errors = [], downloads = new Map(), variants = new Map();
+    let releaseFirstDownload;
+    const firstDownloadGate = new Promise(resolve => { releaseFirstDownload = resolve; });
     page.on('pageerror', error => {errors.push(error.stack);console.error('Browser:',error.message);});
     await page.route('**/api/v2/s/*',route=>route.fulfill({json:set(route.request().url().split('/').pop())}));
     await page.route('**/api/v2/search?*',route=>route.fulfill({json:[set('42'),set('1011011')]}));
-    await page.route('**/api/v1/hinai/d/*',route=>{
+    await page.route('**/api/v1/hinai/d/*',async route=>{
       const variant=route.request().url().split('/').pop(),id=variant.replace(/n$/,''); downloads.set(id,(downloads.get(id)||0)+1);variants.set(id,variant);
+      if(id==='1011011') await firstDownloadGate;
       return route.fulfill({body:archive,contentType:'application/octet-stream'});
     });
     await page.route('**/v3/osu/music/preview/*',route=>route.fulfill({body:fs.readFileSync(path.join(process.cwd(),'hitsounds/Trinagles.mp3')),contentType:'audio/mpeg'}));
@@ -34,7 +37,30 @@ const set = id => ({ id: Number(id), title: id === '42' ? 'Browser download fixt
     await page.locator('#startOverlay').click();
     await page.evaluate(()=>document.getElementById('introVideo').dispatchEvent(new Event('ended')));
     await page.waitForSelector('#main.active');
-    await page.waitForFunction(()=>window.osuLibrary.maps.size===osuStarterMaps.maps.length,null,{timeout:45000}).catch(async error=>{console.error(await page.evaluate(()=>({maps:window.osuLibrary?.maps.size,notifications:document.getElementById('notificationHistory')?.innerText,starter:document.getElementById('starterText')?.textContent})));throw error;});
+    await page.waitForSelector('#starterStatus');
+    assert.match(await page.locator('#starterText').innerText(),/0\/31 downloaded/);
+    const progressBox=await page.locator('#starterStatus').evaluate(node=>{const r=node.getBoundingClientRect();return{rightGap:innerWidth-r.right,y:r.y,parent:node.parentElement.id};});
+    assert.ok(progressBox.rightGap>=0&&progressBox.rightGap<50&&progressBox.y>=56&&progressBox.y<100,'progress is at the top right');
+    assert.notEqual(progressBox.parent,'notificationsPanel','progress is outside the notification panel');
+    await page.waitForTimeout(5500);
+    assert.ok(await page.locator('#starterStatus').isVisible(),'pack progress stays visible beyond a normal toast timeout');
+    await page.screenshot({path:path.join(os.tmpdir(),'osu-starter-progress-top-right.png')});
+    await page.locator('#logo').click({force:true});
+    await page.locator('#notificationToggle').click();
+    await page.waitForSelector('#notificationsPanel.open');
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(400);
+    assert.ok(await page.locator('#starterStatus').isVisible(),'opening notification history does not discard live progress');
+    await page.locator('#logo').click({force:true});
+    releaseFirstDownload();
+    await page.waitForFunction(()=>window.osuLibrary.maps.size===osuStarterMaps.maps.length,null,{timeout:90000}).catch(async error=>{console.error(await page.evaluate(()=>({maps:window.osuLibrary?.maps.size,notifications:document.getElementById('notificationHistory')?.innerText,starter:document.getElementById('starterText')?.textContent})));throw error;});
+    await page.waitForFunction(()=>document.getElementById('starterStatus').dataset.state==='complete');
+    assert.equal(await page.locator('#starterText').innerText(),'31/31 downloaded');
+    assert.match(await page.locator('#starterDetail').innerText(),/All 31 default beatmaps are downloaded/);
+    assert.equal(await page.evaluate(()=>osuStarterMaps.maps.length),31);
+    const requested=[['1207609','2514778'],['52361','160565'],['1857663','3818017'],['404269','879476'],['714225','1513195'],['993369','2104708'],['1596341','3260429'],['21949','75980'],['748273','1576396'],['1839623','4130935'],['31419','105037'],['1242183','2584036'],['501992','1071369'],['1079970','3512544']];
+    const configured=await page.evaluate(()=>osuStarterMaps.maps);
+    for(const pair of requested)assert.ok(configured.some(entry=>entry[0]===pair[0]&&entry[1]===pair[1]),'requested set and preferred difficulty: '+pair.join('/'));
     assert.equal(downloads.size,await page.evaluate(()=>osuStarterMaps.maps.length),'all configured starter sets install');
     assert.equal(downloads.has('2443120'),false,'removed mapset is not automatically downloaded');
     assert.ok([...downloads.values()].every(count=>count===1),'starter installs deduplicate');

@@ -155,7 +155,11 @@
 				<footer class="browseFooter"><span>▤ Discover something new</span><span>Preview a song, then download it to your library.</span></footer>
 			</div>
 		</section>
-		<div id="starterStatus" class="starterStatus" role="status" hidden><span id="starterText"></span><progress id="starterProgress" max="1"></progress><button id="starterRetry" type="button" hidden>Retry</button><button id="starterDismiss" type="button" aria-label="Pause starter downloads">×</button></div>
+		<aside id="starterStatus" class="starterStatus notificationCard" role="status" aria-live="polite" hidden>
+			<span class="notificationIcon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/></svg></span>
+			<div class="notificationContent"><strong>Default beatmaps</strong><span id="starterText"></span><span id="starterDetail"></span><progress id="starterProgress" max="1" aria-label="Default beatmaps downloaded"></progress><button id="starterRetry" type="button" hidden>Retry missing maps</button></div>
+			<button id="starterDismiss" class="notificationDismiss" type="button" aria-label="Pause default beatmap downloads">×</button>
+		</aside>
         <div id="volumeOverlay" aria-label="Master volume" hidden>
             <div id="volumeMeter" role="slider" tabindex="0" aria-label="Master volume" aria-valuemin="0" aria-valuemax="100" aria-valuenow="15">
                 <svg class="volumeRing" viewBox="0 0 220 220" aria-hidden="true"><circle cx="110" cy="110" r="84" pathLength="100"/><circle id="volumeArc" cx="110" cy="110" r="84" pathLength="100"/></svg>

@@ -12,7 +12,7 @@ The game runs on **HTML, CSS and vanilla JavaScript**, with a custom **DOM/SVG r
 
 ![The main menu with its pink osu! logo, radial music visualizer and tutorial shortcut](docs/images/showcase/main-menu.png)
 
-**17 starter mapsets | In-game downloads | Real .osz imports | Saved local scores**
+**31 starter mapsets | In-game downloads | Real .osz imports | Saved local scores**
 
 [Get started](#get-started) | [Controls](#controls) | [Under the hood](#under-the-hood) | [Credits](#credits)
 
@@ -20,7 +20,7 @@ The game runs on **HTML, CSS and vanilla JavaScript**, with a custom **DOM/SVG r
 
 Open **[osu! Web](https://xmocloud.github.io/Osu-Lazer-web/)** and click to start. The game is hosted on **GitHub Pages**; there is nothing to install or build to play. Use a current desktop browser with Web Audio, IndexedDB, SVG and `DecompressionStream('deflate-raw')` support.
 
-New to osu!? Click **Play the osu! tutorial** on the main menu. It opens **new beginnings**, the original tutorial map, with storyboard instructions and voice samples. The 17 starter mapsets download in the background, with the tutorial first; you can play installed maps while the rest arrive.
+New to osu!? Click **Play the osu! tutorial** on the main menu. It opens **new beginnings**, the original tutorial map, with storyboard instructions and voice samples. The 31 starter mapsets download in the background, with the tutorial first; you can play installed maps while the rest arrive. A persistent box at the top right shows how many maps have downloaded and confirms when the full pack is ready. You can pause downloads or retry missing maps directly from this box. Existing players also receive any new default maps they haven't installed yet.
 
 The project is available at **[XMoCloud/Osu-Lazer-web](https://github.com/XMoCloud/Osu-Lazer-web)**. See the [deployment notes](docs/DEPLOYMENT.md) for maintaining the hosted site.
 

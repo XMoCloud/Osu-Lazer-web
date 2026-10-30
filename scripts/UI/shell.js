@@ -37,8 +37,11 @@
       <section id="cursorSettings" class="settingsSection"><h2>Cursor</h2><div class="rangeSetting" data-search="cursor size"><label for="cursorSize">Cursor size <output id="cursorSizeValue"></output></label><input id="cursorSize" type="range" min="0.5" max="2" step="0.05"/><div class="cursorPreview"><img src="assets/cursor.png" alt="Cursor size preview"/></div></div><div class="rangeSetting" data-search="cursor sensitivity mouse"><label for="cursorSensitivity">Cursor sensitivity <output id="cursorSensitivityValue"></output></label><input id="cursorSensitivity" type="range" min="0.4" max="3" step="0.05"/><p>Custom sensitivity captures the mouse during play. Press Esc to pause.</p></div></section>${audioSection}<button id="resetInputSettings" type="button">Restore defaults</button></div></div>
     </section>
     <section id="notificationsPanel" class="sidePanel notificationsPanel" role="dialog" aria-modal="true" aria-label="Notifications" hidden><button class="panelClose" type="button" aria-label="Close notifications">${icons.close}</button><header class="notificationHeading"><h2>NOTIFICATIONS <span id="notificationCount">0</span></h2><button id="clearNotifications" type="button">CLEAR ALL</button></header><div id="notificationHistory"></div><header class="notificationHeading"><h2>RUNNING TASKS <span id="taskCount">0</span></h2><button id="cancelTasks" type="button">CANCEL ALL</button></header><div id="runningTasks"></div></section>
-    <div id="notificationToasts" aria-live="polite" aria-relevant="additions"></div>`;
+    <div id="notificationStack"><div id="notificationToasts" aria-live="polite" aria-relevant="additions"></div></div>`;
   document.body.append(shell);
+  // The persistent download box shares the toast stack, outside both side panels.
+  // Other messages flow below it instead of covering its live counter.
+  document.getElementById('notificationStack').prepend(document.getElementById('starterStatus'));
   const settings=document.getElementById('settingsPanel'),notifications=document.getElementById('notificationsPanel'),scrim=document.getElementById('shellScrim');
   const toggles={settings:document.getElementById('toolbarSettings'),notifications:document.getElementById('notificationToggle')};
   for(const [name,button] of Object.entries(toggles)){button.setAttribute('aria-controls',name+'Panel');button.setAttribute('aria-expanded','false');}
@@ -162,6 +165,5 @@
       if(!taskFrame)taskFrame=requestAnimationFrame(()=>{taskFrame=0;renderTasks();});
     }
   });
-  const starter=document.getElementById('starterStatus');if(starter){starter.classList.add('starterTask');notifications.append(starter);}
   document.getElementById('toast')?.remove();renderSettings();renderNotifications();
 })();
